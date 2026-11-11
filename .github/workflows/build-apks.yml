@@ -23,11 +23,19 @@ jobs:
           distribution: temurin
           java-version: "21"
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install build platform and tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android platform and build-tools
+        run: |
+          # The runner image already ships the SDK, so only the platform and
+          # build-tools this project compiles against are added. sdkmanager is
+          # located by glob because its cmdline-tools directory is versioned.
+          SDK="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          SDKM="$(ls "$SDK"/cmdline-tools/*/bin/sdkmanager 2>/dev/null | tail -1)"
+          if [ -z "$SDKM" ]; then
+            echo "::warning::no sdkmanager on the image, using the SDK as-is"
+            exit 0
+          fi
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" --install "platforms;android-35" "build-tools;35.0.0"
 
       - name: Cache Gradle
         uses: actions/cache@v4
