@@ -75,6 +75,7 @@
     <string name="sign_in_password">Password</string>
     <string name="sign_in_unblock">Unblock code</string>
     <string name="sign_in_unblock_hint">Only when Mozilla emails a code because it blocked the sign-in.</string>
+    <string name="sign_in_have_code">Mozilla sent me a code</string>
     <string name="sign_in_action">Sign in</string>
     <string name="sign_in_working">Signing in…</string>
     <string name="sign_in_totp_title">Two-factor code</string>

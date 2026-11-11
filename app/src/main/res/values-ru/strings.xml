@@ -74,6 +74,7 @@
     <string name="sign_in_password">Пароль</string>
     <string name="sign_in_unblock">Код разблокировки</string>
     <string name="sign_in_unblock_hint">Только если Mozilla пришлёт код из-за блокировки входа.</string>
+    <string name="sign_in_have_code">Mozilla прислала мне код</string>
     <string name="sign_in_action">Войти</string>
     <string name="sign_in_working">Вход…</string>
     <string name="sign_in_totp_title">Код двухфакторной проверки</string>

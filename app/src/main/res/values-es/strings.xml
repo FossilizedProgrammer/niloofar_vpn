@@ -74,6 +74,7 @@
     <string name="sign_in_password">Contraseña</string>
     <string name="sign_in_unblock">Código de desbloqueo</string>
     <string name="sign_in_unblock_hint">Solo si Mozilla envía un código porque bloqueó el inicio de sesión.</string>
+    <string name="sign_in_have_code">Mozilla me envió un código</string>
     <string name="sign_in_action">Iniciar sesión</string>
     <string name="sign_in_working">Iniciando sesión…</string>
     <string name="sign_in_totp_title">Código de verificación</string>

@@ -87,6 +87,7 @@ private fun SignInScreen() {
     var email by remember { mutableStateOf(Store.email(context).orEmpty()) }
     var password by remember { mutableStateOf("") }
     var unblock by remember { mutableStateOf("") }
+    var showUnblock by remember { mutableStateOf(false) }
     var code by remember { mutableStateOf("") }
     var prompt by remember { mutableStateOf<LoginPrompt?>(null) }
     var status by remember { mutableStateOf("") }
@@ -151,6 +152,7 @@ private fun SignInScreen() {
 
     fun cancel() {
         login?.cancel()
+        showUnblock = false
         activity?.finish()
     }
 
@@ -218,6 +220,51 @@ private fun SignInScreen() {
             ) {
                 Text(stringResource(R.string.action_continue))
             }
+        } else if (showUnblock) {
+            Text(
+                text = stringResource(R.string.sign_in_unblock),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = stringResource(R.string.sign_in_unblock_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            OutlinedTextField(
+                value = unblock,
+                onValueChange = { unblock = it },
+                label = { Text(stringResource(R.string.sign_in_unblock)) },
+                supportingText = { Text(stringResource(R.string.sign_in_unblock_hint)) },
+                singleLine = true,
+                enabled = !busy,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Button(
+                onClick = { start() },
+                enabled = !busy && unblock.isNotBlank(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (busy) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(Modifier.size(10.dp))
+                }
+                Text(
+                    stringResource(
+                        if (busy) R.string.sign_in_working else R.string.sign_in_action
+                    )
+                )
+            }
+            TextButton(
+                onClick = { showUnblock = false; unblock = "" },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.action_cancel))
+            }
         } else {
             OutlinedTextField(
                 value = email,
@@ -238,15 +285,6 @@ private fun SignInScreen() {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth()
             )
-            OutlinedTextField(
-                value = unblock,
-                onValueChange = { unblock = it },
-                label = { Text(stringResource(R.string.sign_in_unblock)) },
-                supportingText = { Text(stringResource(R.string.sign_in_unblock_hint)) },
-                singleLine = true,
-                enabled = !busy,
-                modifier = Modifier.fillMaxWidth()
-            )
             Button(
                 onClick = { start() },
                 enabled = !busy,
@@ -265,6 +303,12 @@ private fun SignInScreen() {
                         if (busy) R.string.sign_in_working else R.string.sign_in_action
                     )
                 )
+            }
+            TextButton(
+                onClick = { showUnblock = true },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(stringResource(R.string.sign_in_have_code))
             }
         }
 

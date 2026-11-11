@@ -74,6 +74,7 @@
     <string name="sign_in_password">گذرواژه</string>
     <string name="sign_in_unblock">کد رفع مسدودی</string>
     <string name="sign_in_unblock_hint">فقط وقتی موزیلا به‌خاطر مسدود شدن ورود کدی ایمیل کند.</string>
+    <string name="sign_in_have_code">موزیلا برایم کد فرستاد</string>
     <string name="sign_in_action">ورود</string>
     <string name="sign_in_working">در حال ورود…</string>
     <string name="sign_in_totp_title">کد دومرحله‌ای</string>
