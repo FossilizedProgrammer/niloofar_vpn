@@ -74,6 +74,7 @@ object ServerList {
         if (exits.isEmpty()) return readCache(cache)
         writeCache(cache, exits)
         Log.d(TAG, "listed ${exits.size} free exit(s)")
+        Logs.add("vpn", "listed ${exits.size} free exit(s)")
         return exits
     }
 
@@ -210,7 +211,11 @@ object ServerList {
         }
         EngineProc.stopOnce(child)
         val code = runCatching { child.exitValue() }.getOrNull()
-        if (hasSession(workDir) && code == 0) return null
+        if (hasSession(workDir) && code == 0) {
+            Logs.add("sign-in", "session accepted")
+            return null
+        }
+        Logs.add("sign-in", "session rejected: ${lastMeaning.take(160)}")
         return lastMeaning.take(160).ifBlank { "Sign-in failed" }
     }
 

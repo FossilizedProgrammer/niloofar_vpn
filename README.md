@@ -17,8 +17,10 @@ a TUN tunnel (VPN mode) or exposes the engine's local listeners (proxy mode).
   same Wi-Fi/hotspot can use `SOCKS <ip>:1080` or `HTTP <ip>:1081`.
 - Live throughput/latency readout, per-account quota, Firefox Account sign-in
   (the engine does the login, including two-factor codes, the confirmation
-  email and Mozilla's edge challenge), English/Persian/Russian/Spanish UI with
-  an in-app language picker, and a sandstone rosette launcher icon.
+  email and Mozilla's edge challenge), a create-account guide that opens
+  Mozilla's sign-up page, several accounts saved on the device with a one-tap
+  switch, English/Persian/Russian/Spanish UI with an in-app language picker,
+  and a sandstone rosette launcher icon.
 
 ## Build
 

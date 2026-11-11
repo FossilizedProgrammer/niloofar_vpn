@@ -63,6 +63,11 @@
 
     <string name="account_title">Firefox Account</string>
     <string name="account_hint">Sign in with your Firefox Account. The engine uses the credentials once to obtain a session; only the token is kept on the device.</string>
+    <string name="account_none">No account saved yet. Sign in or create a free Firefox Account to get the free bandwidth.</string>
+    <string name="account_add">Add another account</string>
+    <string name="account_active">In use</string>
+    <string name="account_remove">Remove from this device</string>
+    <string name="account_switch_note">The chosen account is used the next time you connect.</string>
     <string name="sign_in_with_firefox">Sign in with Firefox</string>
     <string name="sign_in_failed">Mozilla rejected this sign-in.</string>
     <string name="sign_in_checking">Checking the session…</string>
@@ -79,9 +84,41 @@
     <string name="sign_in_action">Sign in</string>
     <string name="sign_in_working">Signing in…</string>
     <string name="sign_in_totp_title">Two-factor code</string>
+    <string name="sign_in_captcha_title">CAPTCHA</string>
+    <string name="sign_in_captcha_hint">Type the characters shown in the picture so Mozilla can tell you are not a robot.</string>
+    <string name="sign_in_captcha_broken">The CAPTCHA picture could not be shown.</string>
     <string name="sign_in_totp_hint">Enter the six-digit code from your authenticator app.</string>
     <string name="sign_in_confirm">Confirm the sign-in from your email, then wait here.</string>
     <string name="sign_in_missing">Enter the account email and password first.</string>
+    <string name="sign_in_create_tab">Create account</string>
+    <string name="sign_in_show_password">Show password</string>
+    <string name="sign_in_hide_password">Hide password</string>
+    <string name="sign_in_err_password">That password does not match this account.</string>
+    <string name="sign_in_err_unblock">Mozilla blocked this sign-in and emailed an unblock code. Enter it below.</string>
+    <string name="sign_in_err_unverified">This account is not verified yet. Open Mozilla\'s message, confirm the address, then sign in again.</string>
+    <string name="sign_in_err_unknown">No Firefox Account uses this email.</string>
+    <string name="sign_in_err_unconfirmed">Mozilla has not confirmed this session yet. Approve the sign-in from your email, then try again.</string>
+    <string name="sign_in_err_timeout">Sign-in timed out. Check the connection and try again.</string>
+    <string name="sign_in_err_network">Mozilla\'s servers could not be reached. Try again, or from another network.</string>
+    <string name="sign_in_err_browser">No browser could open the page.</string>
+    <string name="sign_in_err_blocked">Mozilla\'s anti-bot check is blocking this sign-in and asks for a CAPTCHA the engine cannot answer. Try again in a few minutes, or from another network.</string>
+
+    <string name="create_title">Create a Firefox Account</string>
+    <string name="create_hint">A free Firefox Account comes with 50 GB a month. Mozilla\'s own page opens inside the app: create the account there (or sign in), and the session comes back by itself.</string>
+    <string name="create_email_used">Email you will use</string>
+    <string name="create_open">Open accounts.firefox.com</string>
+    <string name="create_have_account">I already have an account</string>
+    <string name="web_sign_in_title">Firefox sign-in</string>
+    <string name="web_sign_in_hint">Mozilla\'s page. Sign in or create an account here; the app takes the session by itself, and only the token is kept.</string>
+    <string name="web_sign_in_confirming">Session found. Confirm the sign-in (the code, or the link in your email) and stay on this page.</string>
+
+    <string name="log_title">Log</string>
+    <string name="log_desc">What the app and the engine did in this run. It stays in memory only; nothing is written to disk.</string>
+    <string name="log_size">%1$d lines \u00b7 %2$s</string>
+    <string name="log_empty">Nothing logged yet.</string>
+    <string name="log_copy">Copy</string>
+    <string name="log_copied">Log copied to the clipboard</string>
+    <string name="log_clear">Clear</string>
 
     <string name="about_title">About</string>
     <string name="about_core">Core: ffvpn (Go) · free exits</string>

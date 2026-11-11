@@ -71,10 +71,12 @@ class FirefoxEngine(private val context: Context) {
             if (error == null) {
                 selected = candidate
                 Store.setLastServer(context, candidate.server.address)
+                Logs.add("vpn", "using ${candidate.server.label} (${candidate.latencyMs} ms)")
                 return null
             }
             lastError = error
             Log.w(TAG, "${candidate.server.address} failed: $error")
+            Logs.add("vpn", "${candidate.server.address} failed: $error")
         }
         return lastError ?: context.getString(R.string.error_no_exits)
     }
@@ -145,7 +147,10 @@ class FirefoxEngine(private val context: Context) {
                     if (quotaLine.containsMatchIn(lastLine)) {
                         Store.setQuota(context, lastLine.substringAfter("Bandwidth:").trim())
                     }
-                    if (lastLine.isNotBlank()) Log.d(TAG, "engine: ${lastLine.take(200)}")
+                    if (lastLine.isNotBlank()) {
+                        Log.d(TAG, "engine: ${lastLine.take(200)}")
+                        Logs.add("engine", lastLine)
+                    }
                 }
             }
         }.apply { isDaemon = true; name = "ffvpn-log"; start() }

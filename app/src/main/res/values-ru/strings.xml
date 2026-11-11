@@ -62,6 +62,11 @@
 
     <string name="account_title">Аккаунт Firefox</string>
     <string name="account_hint">Войдите в свой аккаунт Firefox. Движок один раз использует адрес и пароль, чтобы получить сессию; на устройстве остаётся только токен.</string>
+    <string name="account_none">Аккаунтов пока нет. Войдите или создайте бесплатный аккаунт Firefox, чтобы получить бесплатный трафик.</string>
+    <string name="account_add">Добавить другой аккаунт</string>
+    <string name="account_active">Используется</string>
+    <string name="account_remove">Удалить с устройства</string>
+    <string name="account_switch_note">Выбранный аккаунт будет использован при следующем подключении.</string>
     <string name="sign_in_with_firefox">Войти через Firefox</string>
     <string name="sign_in_failed">Mozilla отклонила этот вход.</string>
     <string name="sign_in_checking">Проверяем сессию…</string>
@@ -78,9 +83,41 @@
     <string name="sign_in_action">Войти</string>
     <string name="sign_in_working">Вход…</string>
     <string name="sign_in_totp_title">Код двухфакторной проверки</string>
+    <string name="sign_in_captcha_title">КАПЧА</string>
+    <string name="sign_in_captcha_hint">Введите символы с картинки, чтобы Mozilla убедилась, что вы не робот.</string>
+    <string name="sign_in_captcha_broken">Не удалось показать картинку CAPTCHA.</string>
     <string name="sign_in_totp_hint">Введите шестизначный код из приложения-аутентификатора.</string>
     <string name="sign_in_confirm">Подтвердите вход из письма и подождите здесь.</string>
     <string name="sign_in_missing">Сначала введите адрес и пароль аккаунта.</string>
+    <string name="sign_in_create_tab">Создать аккаунт</string>
+    <string name="sign_in_show_password">Показать пароль</string>
+    <string name="sign_in_hide_password">Скрыть пароль</string>
+    <string name="sign_in_err_password">Этот пароль не подходит к аккаунту.</string>
+    <string name="sign_in_err_unblock">Mozilla заблокировала вход и прислала код разблокировки. Введите его ниже.</string>
+    <string name="sign_in_err_unverified">Аккаунт ещё не подтверждён. Откройте письмо Mozilla, подтвердите адрес и войдите снова.</string>
+    <string name="sign_in_err_unknown">Аккаунта Firefox с таким адресом нет.</string>
+    <string name="sign_in_err_unconfirmed">Mozilla ещё не подтвердила эту сессию. Подтвердите вход из письма и попробуйте снова.</string>
+    <string name="sign_in_err_timeout">Время входа истекло. Проверьте соединение и попробуйте снова.</string>
+    <string name="sign_in_err_network">Серверы Mozilla недоступны. Повторите попытку или смените сеть.</string>
+    <string name="sign_in_err_browser">Ни один браузер не смог открыть страницу.</string>
+    <string name="sign_in_err_blocked">Антибот Mozilla заблокировал этот вход и требует капчу, которую движок не может пройти. Повторите через несколько минут или из другой сети.</string>
+
+    <string name="create_title">Создать аккаунт Firefox</string>
+    <string name="create_hint">Бесплатный аккаунт Firefox даёт 50 ГБ в месяц. Страница Mozilla откроется внутри приложения: создайте аккаунт (или войдите) там, и сессия вернётся сама.</string>
+    <string name="create_email_used">Адрес, который будете использовать</string>
+    <string name="create_open">Открыть accounts.firefox.com</string>
+    <string name="create_have_account">У меня уже есть аккаунт</string>
+    <string name="web_sign_in_title">Вход в Firefox</string>
+    <string name="web_sign_in_hint">Страница Mozilla. Войдите или создайте аккаунт здесь; приложение получит сессию само, сохраняется только токен.</string>
+    <string name="web_sign_in_confirming">Сессия найдена. Подтвердите вход (код или ссылка из письма) и оставайтесь на этой странице.</string>
+
+    <string name="log_title">Журнал</string>
+    <string name="log_desc">Что делали приложение и движок в этот запуск. Хранится только в памяти и не пишется на устройство.</string>
+    <string name="log_size">%1$d строк \u00b7 %2$s</string>
+    <string name="log_empty">Пока пусто.</string>
+    <string name="log_copy">Копировать</string>
+    <string name="log_copied">Журнал скопирован в буфер обмена</string>
+    <string name="log_clear">Очистить</string>
 
     <string name="about_title">О приложении</string>
     <string name="about_core">Ядро: ffvpn (Go) · бесплатные выходы</string>

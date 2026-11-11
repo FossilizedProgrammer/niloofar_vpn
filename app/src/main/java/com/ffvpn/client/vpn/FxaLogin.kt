@@ -7,7 +7,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 
 /** What the engine asks for on stdin during a sign-in. */
-enum class LoginPrompt { Password, Totp }
+enum class LoginPrompt { Password, Totp, Captcha }
 
 /**
  * Drives the engine's own Firefox Account sign-in: `--email` with the password
@@ -44,6 +44,7 @@ class FxaLogin(private val binary: File, private val workDir: File) {
         password: String,
         unblockCode: String,
         onPrompt: (LoginPrompt) -> Unit,
+        onCaptcha: (String) -> Unit,
         onStatus: (String) -> Unit
     ): String? {
         val session = File(workDir, SESSION)
@@ -88,15 +89,21 @@ class FxaLogin(private val binary: File, private val workDir: File) {
                 if (read < 0) break
                 pending.append(String(chunk, 0, read))
 
+                val captcha = takeCaptcha(pending)
                 last = takeLines(pending, last, onStatus)
-                val prompt = takePrompt(pending) ?: continue
-                val code: String?
-                if (prompt == LoginPrompt.Password && password.isNotBlank()) {
+                val prompt = if (captcha != null) LoginPrompt.Captcha else (takePrompt(pending) ?: continue)
+                val code: String? = when {
+                    // An image CAPTCHA is a question only the person can answer.
+                    prompt == LoginPrompt.Captcha -> {
+                        onCaptcha(captcha.orEmpty())
+                        await()
+                    }
                     // The password is already known; only ask for what we lack.
-                    code = password
-                } else {
-                    onPrompt(prompt)
-                    code = await()
+                    prompt == LoginPrompt.Password && password.isNotBlank() -> password
+                    else -> {
+                        onPrompt(prompt)
+                        await()
+                    }
                 }
                 if (code == null) {
                     problem = "Sign-in was cancelled"
@@ -118,6 +125,7 @@ class FxaLogin(private val binary: File, private val workDir: File) {
         if (token.length >= TOKEN_LENGTH) return null
         if (problem != null) return problem
         Log.w(TAG, "sign-in ended without a token: $last")
+        Logs.add("sign-in", "ended without a token: ${last.take(160)}")
         return last.take(200).ifBlank { "Sign-in failed" }
     }
 
@@ -144,8 +152,21 @@ class FxaLogin(private val binary: File, private val workDir: File) {
             pending.delete(0, end + 1)
             if (line.isEmpty()) continue
             last = line.replace(STAMP, "")
+            Logs.add("sign-in", last)
             onStatus(last)
         }
+    }
+
+    /** Lifts an image CAPTCHA prompt, with the picture's data URL, out of the stream. */
+    private fun takeCaptcha(pending: StringBuilder): String? {
+        val text = pending.toString()
+        val start = text.indexOf(CAPTCHA_MARKER)
+        if (start < 0) return null
+        val end = text.indexOf('\n', start)
+        if (end < 0) return null
+        val image = text.substring(start + CAPTCHA_MARKER.length, end).trim()
+        pending.delete(start, end + 1)
+        return image.ifBlank { null }
     }
 
     /** Consumes a stdin prompt; the engine prints them without a newline. */
@@ -163,6 +184,7 @@ class FxaLogin(private val binary: File, private val workDir: File) {
         const val SIGN_IN_TIMEOUT_MS = 600_000L
         const val ANSWER_TIMEOUT_MS = 300_000L
         const val POLL_MS = 200L
+        const val CAPTCHA_MARKER = "FFVPN_CAPTCHA "
         val STAMP = Regex("""^\d{4}/\d{2}/\d{2} \d{2}:\d{2}:\d{2}\s*""")
         val PROMPTS = listOf(
             LoginPrompt.Totp to "Two-factor code (TOTP):",

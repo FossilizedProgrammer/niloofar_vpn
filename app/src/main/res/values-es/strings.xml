@@ -62,6 +62,11 @@
 
     <string name="account_title">Cuenta de Firefox</string>
     <string name="account_hint">Inicia sesión con tu cuenta de Firefox. El motor usa el correo y la contraseña una vez para obtener la sesión; en el dispositivo solo se guarda el token.</string>
+    <string name="account_none">Aún no hay ninguna cuenta. Inicia sesión o crea una cuenta de Firefox gratuita para obtener el tráfico gratuito.</string>
+    <string name="account_add">Añadir otra cuenta</string>
+    <string name="account_active">En uso</string>
+    <string name="account_remove">Quitar de este dispositivo</string>
+    <string name="account_switch_note">La cuenta elegida se usará en la próxima conexión.</string>
     <string name="sign_in_with_firefox">Iniciar sesión con Firefox</string>
     <string name="sign_in_failed">Mozilla rechazó este inicio de sesión.</string>
     <string name="sign_in_checking">Comprobando la sesión…</string>
@@ -78,9 +83,41 @@
     <string name="sign_in_action">Iniciar sesión</string>
     <string name="sign_in_working">Iniciando sesión…</string>
     <string name="sign_in_totp_title">Código de verificación</string>
+    <string name="sign_in_captcha_title">CAPTCHA</string>
+    <string name="sign_in_captcha_hint">Escribe los caracteres de la imagen para que Mozilla compruebe que no eres un robot.</string>
+    <string name="sign_in_captcha_broken">No se pudo mostrar la imagen del CAPTCHA.</string>
     <string name="sign_in_totp_hint">Introduce el código de seis dígitos de tu app de autenticación.</string>
     <string name="sign_in_confirm">Confirma el inicio de sesión desde tu correo y espera aquí.</string>
     <string name="sign_in_missing">Primero introduce el correo y la contraseña de la cuenta.</string>
+    <string name="sign_in_create_tab">Crear cuenta</string>
+    <string name="sign_in_show_password">Mostrar contraseña</string>
+    <string name="sign_in_hide_password">Ocultar contraseña</string>
+    <string name="sign_in_err_password">Esa contraseña no corresponde a esta cuenta.</string>
+    <string name="sign_in_err_unblock">Mozilla bloqueó este inicio de sesión y envió un código de desbloqueo. Introdúcelo abajo.</string>
+    <string name="sign_in_err_unverified">Esta cuenta aún no está verificada. Abre el mensaje de Mozilla, confirma la dirección y vuelve a iniciar sesión.</string>
+    <string name="sign_in_err_unknown">Ninguna cuenta de Firefox usa este correo.</string>
+    <string name="sign_in_err_unconfirmed">Mozilla aún no ha confirmado esta sesión. Aprueba el inicio de sesión desde tu correo e inténtalo de nuevo.</string>
+    <string name="sign_in_err_timeout">El inicio de sesión agotó el tiempo. Revisa la conexión e inténtalo de nuevo.</string>
+    <string name="sign_in_err_network">No se pudo llegar a los servidores de Mozilla. Inténtalo otra vez o desde otra red.</string>
+    <string name="sign_in_err_browser">Ningún navegador pudo abrir la página.</string>
+    <string name="sign_in_err_blocked">La protección antirrobot de Mozilla está bloqueando este inicio de sesión y pide un CAPTCHA que el motor no puede resolver. Inténtalo de nuevo en unos minutos o desde otra red.</string>
+
+    <string name="create_title">Crear una cuenta de Firefox</string>
+    <string name="create_hint">Una cuenta de Firefox gratuita incluye 50 GB al mes. La página de Mozilla se abre dentro de la app: crea la cuenta (o inicia sesión) ahí y la sesión vuelve sola.</string>
+    <string name="create_email_used">Correo que vas a usar</string>
+    <string name="create_open">Abrir accounts.firefox.com</string>
+    <string name="create_have_account">Ya tengo una cuenta</string>
+    <string name="web_sign_in_title">Inicio de sesión de Firefox</string>
+    <string name="web_sign_in_hint">La página de Mozilla. Inicia sesión o crea una cuenta aquí; la app toma la sesión por sí sola y solo guarda el token.</string>
+    <string name="web_sign_in_confirming">Sesión encontrada. Confirma el inicio de sesión (el código o el enlace del correo) y quédate en esta página.</string>
+
+    <string name="log_title">Registro</string>
+    <string name="log_desc">Lo que hicieron la app y el motor en esta ejecución. Solo se guarda en memoria; no se escribe en el dispositivo.</string>
+    <string name="log_size">%1$d líneas \u00b7 %2$s</string>
+    <string name="log_empty">Todavía no hay nada.</string>
+    <string name="log_copy">Copiar</string>
+    <string name="log_copied">Registro copiado al portapapeles</string>
+    <string name="log_clear">Borrar</string>
 
     <string name="about_title">Acerca de</string>
     <string name="about_core">Núcleo: ffvpn (Go) · salidas gratuitas</string>

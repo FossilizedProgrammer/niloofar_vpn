@@ -62,6 +62,11 @@
 
     <string name="account_title">حساب فایرفاکس</string>
     <string name="account_hint">با حساب فایرفاکس خود وارد شوید. هسته ایمیل و گذرواژه را یک‌بار برای گرفتن نشست به کار می‌برد و تنها رمز نشست روی دستگاه نگه داشته می‌شود.</string>
+    <string name="account_none">هنوز حسابی ذخیره نشده است. وارد شوید یا یک حساب رایگان فایرفاکس بسازید تا پهنای باند رایگان بگیرید.</string>
+    <string name="account_add">افزودن حساب دیگر</string>
+    <string name="account_active">در حال استفاده</string>
+    <string name="account_remove">حذف از این دستگاه</string>
+    <string name="account_switch_note">حساب انتخاب‌شده در اتصال بعدی به کار می‌رود.</string>
     <string name="sign_in_with_firefox">ورود با فایرفاکس</string>
     <string name="sign_in_failed">موزیلا این ورود را نپذیرفت.</string>
     <string name="sign_in_checking">در حال بررسی نشست…</string>
@@ -78,9 +83,41 @@
     <string name="sign_in_action">ورود</string>
     <string name="sign_in_working">در حال ورود…</string>
     <string name="sign_in_totp_title">کد دومرحله‌ای</string>
+    <string name="sign_in_captcha_title">کد تصویر (کپچا)</string>
+    <string name="sign_in_captcha_hint">کاراکترهای تصویر را وارد کنید تا موزیلا مطمئن شود ربات نیستید.</string>
+    <string name="sign_in_captcha_broken">تصویر کپچا نمایش داده نشد.</string>
     <string name="sign_in_totp_hint">کد شش‌رقمی برنامهٔ احراز هویت را وارد کنید.</string>
     <string name="sign_in_confirm">ورود را از ایمیل‌تان تأیید کنید و همین‌جا صبر کنید.</string>
     <string name="sign_in_missing">اول ایمیل و گذرواژهٔ حساب را وارد کنید.</string>
+    <string name="sign_in_create_tab">ساخت حساب</string>
+    <string name="sign_in_show_password">نمایش گذرواژه</string>
+    <string name="sign_in_hide_password">پنهان کردن گذرواژه</string>
+    <string name="sign_in_err_password">این گذرواژه با این حساب نمی‌خواند.</string>
+    <string name="sign_in_err_unblock">موزیلا این ورود را مسدود کرده و کد رفع مسدودی ایمیل کرده است. کد را پایین وارد کنید.</string>
+    <string name="sign_in_err_unverified">این حساب هنوز تأیید نشده است. پیام موزیلا را باز کنید، نشانی را تأیید کنید و دوباره وارد شوید.</string>
+    <string name="sign_in_err_unknown">هیچ حساب فایرفاکسی با این ایمیل وجود ندارد.</string>
+    <string name="sign_in_err_unconfirmed">موزیلا هنوز این نشست را تأیید نکرده است. ورود را از ایمیل تأیید کنید و دوباره تلاش کنید.</string>
+    <string name="sign_in_err_timeout">زمان ورود تمام شد. اتصال را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="sign_in_err_network">به سرورهای موزیلا دسترسی نبود. دوباره تلاش کنید یا از شبکهٔ دیگری وارد شوید.</string>
+    <string name="sign_in_err_browser">هیچ مرورگری نتوانست صفحه را باز کند.</string>
+    <string name="sign_in_err_blocked">سامانهٔ ضدربات موزیلا این ورود را مسدود کرده و کپچایی می‌خواهد که هسته نمی‌تواند پاسخ دهد. چند دقیقهٔ دیگر یا از شبکهٔ دیگری دوباره تلاش کنید.</string>
+
+    <string name="create_title">ساخت حساب فایرفاکس</string>
+    <string name="create_hint">هر حساب رایگان فایرفاکس ماهی ۵۰ گیگابایت دارد. صفحهٔ خود موزیلا داخل برنامه باز می‌شود: همان‌جا حساب بسازید (یا وارد شوید) و نشست خودکار برمی‌گردد.</string>
+    <string name="create_email_used">ایمیلی که به کار می‌برید</string>
+    <string name="create_open">باز کردن accounts.firefox.com</string>
+    <string name="create_have_account">از قبل حساب دارم</string>
+    <string name="web_sign_in_title">ورود به فایرفاکس</string>
+    <string name="web_sign_in_hint">صفحهٔ موزیلا. همین‌جا وارد شوید یا حساب بسازید؛ نشست خودکار به برنامه می‌رسد و تنها توکن نگه داشته می‌شود.</string>
+    <string name="web_sign_in_confirming">نشست پیدا شد. ورود را تأیید کنید (کد، یا پیوند ایمیل) و همین صفحه بمانید.</string>
+
+    <string name="log_title">گزارش</string>
+    <string name="log_desc">آنچه برنامه و هسته در این اجرا انجام داده‌اند. فقط در حافظه می‌ماند و روی دستگاه نوشته نمی‌شود.</string>
+    <string name="log_size">%1$d خط \u00b7 %2$s</string>
+    <string name="log_empty">هنوز چیزی ثبت نشده است.</string>
+    <string name="log_copy">کپی</string>
+    <string name="log_copied">گزارش در کلیپ‌بورد کپی شد</string>
+    <string name="log_clear">پاک کردن</string>
 
     <string name="about_title">درباره</string>
     <string name="about_core">هسته: ffvpn (Go) · خروجی رایگان</string>

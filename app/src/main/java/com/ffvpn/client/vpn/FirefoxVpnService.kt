@@ -71,6 +71,7 @@ class FirefoxVpnService : VpnService() {
         drops = 0
         sessionMode = Store.mode(this)
         sessionShare = Store.share(this)
+        Logs.add("vpn", "connecting (${sessionMode.name.lowercase()})")
         notifyForeground(getString(R.string.notification_connecting))
         VpnState.update {
             it.copy(
@@ -125,16 +126,41 @@ class FirefoxVpnService : VpnService() {
             )
         )
         Log.i(TAG, "tunnel up")
+        Logs.add("vpn", "tunnel up")
         watch(core)
     }
 
-    /** Wakes up when the engine dies, so a dropped exit is not left unnoticed. */
+    /**
+     * Wakes up when the engine dies, so a dropped exit is not left unnoticed,
+     * and keeps the session honest: the engine process can stay up while the
+     * exit behind it is gone, so the local proxy is asked for a connection now
+     * and then and a session that stops answering is rebuilt.
+     */
     private fun watch(core: FirefoxEngine) {
         monitor = Thread {
+            var sinceProbe = 0
+            var misses = 0
             while (!stopping) {
                 if (!core.isAlive()) {
                     onDrop()
                     return@Thread
+                }
+                sinceProbe++
+                if (sinceProbe >= HEALTH_EVERY_TICKS) {
+                    sinceProbe = 0
+                    if (stopping) return@Thread
+                    if (Traffic.serves(SOCKS_PORT, HEALTH_TIMEOUT_MS)) {
+                        if (misses > 0) Logs.add("vpn", "keep-alive probe answered again")
+                        misses = 0
+                    } else {
+                        misses++
+                        Logs.add("vpn", "keep-alive probe failed ($misses/$HEALTH_MAX_MISSES)")
+                        if (misses >= HEALTH_MAX_MISSES) {
+                            Logs.add("vpn", "the exit stopped answering; rebuilding the session")
+                            onDrop()
+                            return@Thread
+                        }
+                    }
                 }
                 try {
                     Thread.sleep(WATCH_MS)
@@ -149,6 +175,7 @@ class FirefoxVpnService : VpnService() {
         if (stopping) return
         drops += 1
         Log.w(TAG, "engine exited (drop $drops)")
+        Logs.add("vpn", "session dropped ($drops/$MAX_DROPS)")
         closeTunnel()
         engine?.stop()
         if (drops > MAX_DROPS) {
@@ -278,6 +305,7 @@ class FirefoxVpnService : VpnService() {
             )
         }
         Log.w(TAG, "session failed: $message")
+        Logs.add("vpn", "failed: $message")
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -290,6 +318,7 @@ class FirefoxVpnService : VpnService() {
         engine?.stop()
         VpnState.update { VpnUi(signedIn = it.signedIn, email = it.email, quota = it.quota) }
         Log.i(TAG, "session stopped by user")
+        Logs.add("vpn", "stopped")
         stopForeground(STOP_FOREGROUND_REMOVE)
         stopSelf()
     }
@@ -333,6 +362,13 @@ class FirefoxVpnService : VpnService() {
         private const val WATCH_MS = 1_000L
         private const val RECONNECT_DELAY_MS = 1_500L
         private const val MAX_DROPS = 2
+
+        // The keep-alive probe: a minute between checks, two misses in a row
+        // (about two minutes) before the exit is called dead.
+        private const val HEALTH_EVERY_TICKS = 60
+        private const val HEALTH_TIMEOUT_MS = 8_000
+        private const val HEALTH_MAX_MISSES = 2
+        private const val SOCKS_PORT = 1080
 
         /** Lets the UI notice a service the system killed underneath it. */
         @Volatile

@@ -1,0 +1,65 @@
+--- a/internal/fxa/challenge.go
++++ b/internal/fxa/challenge.go
+@@ -281,6 +281,17 @@
+ 	return challenges, m[2], nil
+ }
+ 
++// captchaSolver shows a Fastly CAPTCHA image (a data: URL) to a person and
++// returns the characters they read. It stays nil unless a caller installs one,
++// because an image CAPTCHA cannot be answered by the program itself.
++var captchaSolver func(imageDataURL string) (string, error)
++
++// SetCaptchaSolver installs the solver used for image CAPTCHA challenges; call
++// it before starting a sign-in.
++func SetCaptchaSolver(solver func(imageDataURL string) (string, error)) {
++	captchaSolver = solver
++}
++
+ // answerChallenge builds the fst-post-back answer for one challenge task.
+ func answerChallenge(client *http.Client, prefixURL, token string, ch fastlyChallenge) (any, error) {
+ 	switch ch.Ty {
+@@ -312,9 +323,22 @@
+ 		return clientMetricsAnswer(), nil
+ 
+ 	case "captcha":
+-		// An image CAPTCHA needs a person; the CLI cannot answer it. Sign in
+-		// once from Firefox and use --session-token instead.
+-		return nil, errors.New("Fastly requires an image CAPTCHA answer; sign in from Firefox and pass its sessionToken")
++		// An image CAPTCHA needs a person. When a solver was installed (the app
++		// shows the image and takes the characters typed), ask it.
++		if captchaSolver == nil {
++			return nil, errors.New("Fastly requires an image CAPTCHA answer; sign in from Firefox and pass its sessionToken")
++		}
++		var d struct {
++			Image string `json:"image_b64"`
++		}
++		if err := json.Unmarshal(ch.Data, &d); err != nil || !strings.HasPrefix(d.Image, "data:image/") {
++			return nil, errors.New("unrecognized CAPTCHA challenge data")
++		}
++		answer, err := captchaSolver(d.Image)
++		if err != nil {
++			return nil, fmt.Errorf("CAPTCHA: %w", err)
++		}
++		return map[string]any{"ty": "captcha", "answer": strings.TrimSpace(answer)}, nil
+ 
+ 	default:
+ 		return nil, fmt.Errorf("unsupported Fastly challenge type %q", ch.Ty)
+--- a/main.go
++++ b/main.go
+@@ -461,6 +461,16 @@
+ 		fmt.Scanln(&line)
+ 		password = line
+ 	}
++	// An image CAPTCHA is a question only a person can answer: print it as a
++	// data URL and read the characters from stdin while the sign-in waits.
++	fxa.SetCaptchaSolver(func(image string) (string, error) {
++		fmt.Printf("FFVPN_CAPTCHA %s\n", image)
++		var answer string
++		if _, err := fmt.Scanln(&answer); err != nil {
++			return "", err
++		}
++		return answer, nil
++	})
+ 	client := fxa.NewClient(opts.authServer)
+ 	session, err := client.Login(opts.email, password, opts.unblockCode)
+ 	if err != nil {

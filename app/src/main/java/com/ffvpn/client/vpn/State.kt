@@ -38,10 +38,12 @@ object VpnState {
 
     /** Re-reads the account bits from disk, e.g. after sign-in or on resume. */
     fun syncAccount(context: Context) {
+        Store.ensureAccounts(context)
+        val active = Store.activeAccount(context)
         _ui.value = _ui.value.copy(
             signedIn = Store.hasSession(context),
-            email = Store.email(context).orEmpty(),
-            quota = Store.quota(context).orEmpty(),
+            email = active?.email ?: Store.email(context).orEmpty(),
+            quota = active?.quota?.takeIf { it.isNotBlank() } ?: Store.quota(context).orEmpty(),
             mode = Store.mode(context),
             share = Store.share(context)
         )
