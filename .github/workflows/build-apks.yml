@@ -65,3 +65,21 @@ jobs:
           files: dist/*.apk
           generate_release_notes: true
           fail_on_unmatched_files: true
+
+      # A branch only ever gets this rolling release, so the APKs under Releases
+      # follow main instead of waiting for the next version tag. Version tags
+      # above stay the permanent, numbered snapshots.
+      - name: Refresh the Latest build release
+        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Latest build
+          prerelease: true
+          overwrite_files: true
+          fail_on_unmatched_files: true
+          body: |
+            Built from `${{ github.sha }}` on `${{ github.ref_name }}`.
+            These APKs are newer than the newest version tag; numbered
+            releases are the version tags.
+          files: dist/*.apk

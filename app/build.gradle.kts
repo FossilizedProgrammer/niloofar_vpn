@@ -11,8 +11,8 @@ android {
         applicationId = "com.ffvpn.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
     }
 
     // One APK per CPU family plus a universal one that runs anywhere.
