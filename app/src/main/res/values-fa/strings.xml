@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel">تونل</string>
+    <string name="notification_connecting">در حال ساخت تونل…</string>
+    <string name="notification_connected">تونل برقرار است</string>
+    <string name="notification_proxy">پروکسی در حال اجراست</string>
+    <string name="action_disconnect">قطع اتصال</string>
+    <string name="action_sign_in">ورود</string>
+    <string name="action_sign_out">خروج از حساب</string>
+    <string name="action_cancel">انصراف</string>
+    <string name="action_continue">ادامه</string>
+
+    <string name="step_reading_list">در حال خواندن فهرست خروجی‌های رایگان…</string>
+    <string name="step_probing">در حال بررسی %1$s خروجی…</string>
+    <string name="step_dialing">اتصال به %1$s…</string>
+    <string name="step_opening_tunnel">در حال باز کردن تونل…</string>
+    <string name="step_reconnecting">در حال اتصال دوباره…</string>
+
+    <string name="error_engine_missing">هستهٔ تونل در این نسخه وجود ندارد.</string>
+    <string name="error_sign_in">اول با حساب فایرفاکس وارد شوید.</string>
+    <string name="error_no_exits">هیچ خروجی رایگانی در دسترس نیست.</string>
+    <string name="error_no_traffic">خروجی اتصال را پذیرفت ولی ترافیکی رد نکرد.</string>
+    <string name="error_no_proxy">پس از %1$d ثانیه پروکسی بالا نیامد.</string>
+    <string name="error_tunnel_failed">رابط تونل بالا نیامد.</string>
+    <string name="error_dropped">تونل قطع شد و دوباره برقرار نشد.</string>
+
+    <string name="status_off">وصل نیستید</string>
+    <string name="status_connecting">در حال اتصال</string>
+    <string name="status_on">وصل شده</string>
+    <string name="status_error">اتصال ناموفق</string>
+    <string name="status_proxy_on">پروکسی فعال</string>
+
+    <string name="hint_off">برای عبور ترافیک از یک خروجی رایگان فایرفاکس، دایره را بزنید.</string>
+    <string name="hint_connecting">در حال پیدا کردن سریع‌ترین خروجیِ پاسخ‌دهنده.</string>
+    <string name="hint_on">ترافیک شما از پروکسی موزیلا بیرون می‌رود.</string>
+    <string name="hint_proxy_on">پروکسی محلی روی 127.0.0.1:1080 آماده است.</string>
+    <string name="share_ready">در شبکه روی %1$s به اشتراک گذاشته شد</string>
+    <string name="share_ports">SOCKS %1$s · HTTP %2$s</string>
+    <string name="share_no_network">برای اشتراک‌گذاری به وای‌فای وصل شوید یا هات‌اسپات روشن کنید.</string>
+
+    <string name="cd_settings">تنظیمات</string>
+    <string name="cd_power">اتصال یا قطع اتصال</string>
+
+    <string name="settings_title">تنظیمات</string>
+    <string name="language_title">زبان</string>
+    <string name="language_desc">بی‌درنگ اعمال می‌شود. «سیستم» از زبان دستگاه پیروی می‌کند.</string>
+    <string name="language_system">سیستم</string>
+
+    <string name="mode_title">حالت اتصال</string>
+    <string name="mode_vpn">وی‌پی‌ان</string>
+    <string name="mode_vpn_desc">تمام ترافیک این دستگاه از تونل عبور کند.</string>
+    <string name="mode_proxy">پروکسی</string>
+    <string name="mode_proxy_desc">یک پروکسی SOCKS/HTTP برای برنامه‌هایی که خودتان تنظیم می‌کنید.</string>
+    <string name="share_title">اشتراک در شبکه</string>
+    <string name="share_desc">دستگاه‌های دیگر این وای‌فای یا هات‌اسپات هم از اتصال استفاده کنند.</string>
+    <string name="proxy_address">آدرس پروکسی</string>
+    <string name="settings_next_connect">تغییرات در اتصال بعدی اعمال می‌شود.</string>
+
+    <string name="server_title">سرور</string>
+    <string name="server_desc">انتخاب کنید ترافیک از کدام کشور موزیلا خارج شود، یا برنامه سریع‌ترین خروجی را انتخاب کند.</string>
+    <string name="server_auto">خودکار (سریع‌ترین)</string>
+
+    <string name="account_title">حساب فایرفاکس</string>
+    <string name="account_hint">با حساب فایرفاکس خود وارد شوید. هسته ایمیل و گذرواژه را یک‌بار برای گرفتن نشست به کار می‌برد و تنها رمز نشست روی دستگاه نگه داشته می‌شود.</string>
+    <string name="sign_in_with_firefox">ورود با فایرفاکس</string>
+    <string name="sign_in_failed">موزیلا این ورود را نپذیرفت.</string>
+    <string name="sign_in_checking">در حال بررسی نشست…</string>
+    <string name="signed_in_as">وارد شده با</string>
+    <string name="quota_label">پهنای باند رایگان</string>
+
+    <string name="sign_in_title">ورود به فایرفاکس</string>
+    <string name="sign_in_hint">ایمیل و گذرواژه از طریق هستهٔ همراه به موزیلا می‌رسند؛ تنها رمز نشستی که برمی‌گردد روی دستگاه می‌ماند.</string>
+    <string name="sign_in_email">ایمیل</string>
+    <string name="sign_in_password">گذرواژه</string>
+    <string name="sign_in_unblock">کد رفع مسدودی</string>
+    <string name="sign_in_unblock_hint">فقط وقتی موزیلا به‌خاطر مسدود شدن ورود کدی ایمیل کند.</string>
+    <string name="sign_in_action">ورود</string>
+    <string name="sign_in_working">در حال ورود…</string>
+    <string name="sign_in_totp_title">کد دومرحله‌ای</string>
+    <string name="sign_in_totp_hint">کد شش‌رقمی برنامهٔ احراز هویت را وارد کنید.</string>
+    <string name="sign_in_confirm">ورود را از ایمیل‌تان تأیید کنید و همین‌جا صبر کنید.</string>
+    <string name="sign_in_missing">اول ایمیل و گذرواژهٔ حساب را وارد کنید.</string>
+
+    <string name="about_title">درباره</string>
+    <string name="about_core">هسته: ffvpn (Go) · خروجی رایگان</string>
+    <string name="about_version">نسخه %1$s (%2$d)</string>
+    <string name="free_tier">رایگان</string>
+    <string name="latency_format">%1$d میلی‌ثانیه</string>
+    <string name="exit_unknown">خروجی خودکار</string>
+    <string name="exit_label">خروجی</string>
+    <string name="latency_label">تأخیر</string>
+</resources>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel">Túnel</string>
+    <string name="notification_connecting">Creando el túnel…</string>
+    <string name="notification_connected">Túnel activo</string>
+    <string name="notification_proxy">Proxy en marcha</string>
+    <string name="action_disconnect">Desconectar</string>
+    <string name="action_sign_in">Iniciar sesión</string>
+    <string name="action_sign_out">Cerrar sesión</string>
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_continue">Continuar</string>
+
+    <string name="step_reading_list">Leyendo la lista de salidas gratuitas…</string>
+    <string name="step_probing">Probando %1$s salidas…</string>
+    <string name="step_dialing">Conectando con %1$s…</string>
+    <string name="step_opening_tunnel">Abriendo el túnel…</string>
+    <string name="step_reconnecting">Reconectando…</string>
+
+    <string name="error_engine_missing">Esta versión no incluye el motor del túnel.</string>
+    <string name="error_sign_in">Primero inicia sesión en tu cuenta de Firefox.</string>
+    <string name="error_no_exits">Ahora mismo no hay salidas gratuitas disponibles.</string>
+    <string name="error_no_traffic">La salida aceptó la conexión pero no transportó tráfico.</string>
+    <string name="error_no_proxy">Sin proxy tras %1$d segundos.</string>
+    <string name="error_tunnel_failed">No se pudo iniciar la interfaz del túnel.</string>
+    <string name="error_dropped">El túnel se cayó y no pudo reconstruirse.</string>
+
+    <string name="status_off">Sin conexión</string>
+    <string name="status_connecting">Conectando</string>
+    <string name="status_on">Conectado</string>
+    <string name="status_error">Error de conexión</string>
+    <string name="status_proxy_on">Proxy en marcha</string>
+
+    <string name="hint_off">Toca el orbe para enviar tu tráfico por una salida gratuita de Firefox.</string>
+    <string name="hint_connecting">Buscando la salida más rápida que responda.</string>
+    <string name="hint_on">Tu tráfico sale por el proxy de Mozilla.</string>
+    <string name="hint_proxy_on">El proxy local está listo en 127.0.0.1:1080.</string>
+    <string name="share_ready">Compartido en la red en %1$s</string>
+    <string name="share_ports">SOCKS %1$s · HTTP %2$s</string>
+    <string name="share_no_network">Conéctate a una Wi-Fi o activa un punto de acceso.</string>
+
+    <string name="cd_settings">Ajustes</string>
+    <string name="cd_power">Conectar o desconectar</string>
+
+    <string name="settings_title">Ajustes</string>
+    <string name="language_title">Idioma</string>
+    <string name="language_desc">Se aplica al instante. «Sistema» sigue el idioma del dispositivo.</string>
+    <string name="language_system">Sistema</string>
+
+    <string name="mode_title">Modo de conexión</string>
+    <string name="mode_vpn">VPN</string>
+    <string name="mode_vpn_desc">Enviar todo el tráfico de este dispositivo por el túnel.</string>
+    <string name="mode_proxy">Proxy</string>
+    <string name="mode_proxy_desc">Ejecutar un proxy SOCKS/HTTP para las apps que configures.</string>
+    <string name="share_title">Compartir en la red</string>
+    <string name="share_desc">Permitir que otros dispositivos de esta Wi-Fi o punto de acceso usen la conexión.</string>
+    <string name="proxy_address">Dirección del proxy</string>
+    <string name="settings_next_connect">Los cambios se aplican en la próxima conexión.</string>
+
+    <string name="server_title">Servidor</string>
+    <string name="server_desc">Elige por qué país sale el tráfico de la red de Mozilla, o deja que la app use la salida más rápida.</string>
+    <string name="server_auto">Automático (la más rápida)</string>
+
+    <string name="account_title">Cuenta de Firefox</string>
+    <string name="account_hint">Inicia sesión con tu cuenta de Firefox. El motor usa el correo y la contraseña una vez para obtener la sesión; en el dispositivo solo se guarda el token.</string>
+    <string name="sign_in_with_firefox">Iniciar sesión con Firefox</string>
+    <string name="sign_in_failed">Mozilla rechazó este inicio de sesión.</string>
+    <string name="sign_in_checking">Comprobando la sesión…</string>
+    <string name="signed_in_as">Sesión iniciada como</string>
+    <string name="quota_label">Tráfico gratuito</string>
+
+    <string name="sign_in_title">Inicio de sesión de Firefox</string>
+    <string name="sign_in_hint">El correo y la contraseña llegan a Mozilla a través del motor incluido; en el dispositivo solo queda el token de sesión.</string>
+    <string name="sign_in_email">Correo</string>
+    <string name="sign_in_password">Contraseña</string>
+    <string name="sign_in_unblock">Código de desbloqueo</string>
+    <string name="sign_in_unblock_hint">Solo si Mozilla envía un código porque bloqueó el inicio de sesión.</string>
+    <string name="sign_in_action">Iniciar sesión</string>
+    <string name="sign_in_working">Iniciando sesión…</string>
+    <string name="sign_in_totp_title">Código de verificación</string>
+    <string name="sign_in_totp_hint">Introduce el código de seis dígitos de tu app de autenticación.</string>
+    <string name="sign_in_confirm">Confirma el inicio de sesión desde tu correo y espera aquí.</string>
+    <string name="sign_in_missing">Primero introduce el correo y la contraseña de la cuenta.</string>
+
+    <string name="about_title">Acerca de</string>
+    <string name="about_core">Núcleo: ffvpn (Go) · salidas gratuitas</string>
+    <string name="about_version">Versión %1$s (%2$d)</string>
+    <string name="free_tier">Gratis</string>
+    <string name="latency_format">%1$d ms</string>
+    <string name="exit_unknown">Salida automática</string>
+    <string name="exit_label">Salida</string>
+    <string name="latency_label">Latencia</string>
+</resources>

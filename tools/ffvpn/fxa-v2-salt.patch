@@ -1,0 +1,17 @@
+--- a/internal/fxa/crypto.go
++++ b/internal/fxa/crypto.go
+@@ -70,11 +70,10 @@
+ }
+ 
+ // QuickStretchV2 derives the v2 stretched password from the server-provided
+-// clientSalt (a 32-hex-char token). The salt string embeds the full
+-// namespace prefix, matching FxA's "create_salt" format.
++// clientSalt. The server hands back the salt already namespaced
++// ("identity.mozilla.com/picl/v1/quickStretchV2:<hex>"), so it is used verbatim.
+ func QuickStretchV2(clientSalt, password string) []byte {
+-	salt := fxaNamespace + "quickStretchV2:" + clientSalt
+-	return pbkdf2SHA256([]byte(password), []byte(salt), 650000, 32)
++	return pbkdf2SHA256([]byte(password), []byte(clientSalt), 650000, 32)
+ }
+ 
+ // AuthPW derives the hex authPW sent to /account/login.

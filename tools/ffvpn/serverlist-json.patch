@@ -1,0 +1,83 @@
+--- a/main.go
++++ b/main.go
+@@ -3,13 +3,14 @@
+ //
+ // It signs in with a Firefox Account, activates the Guardian proxy service,
+ // fetches short-lived JWT proxy passes, and exposes the tunnel as a local
+-// SOCKS5 / HTTP CONNECT proxy. Requires a Firefox Account that Guardian
+-// considers entitled (a Mozilla VPN subscription) and a supported region —
+-// both are enforced server-side.
++// SOCKS5 / HTTP CONNECT proxy. Guardian decides what the account may use: a
++// plain Firefox Account gets the bandwidth-limited proxy, a Mozilla VPN
++// subscription the full one.
+ package main
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"errors"
+ 	"flag"
+ 	"fmt"
+@@ -59,6 +60,7 @@
+ 	usageOnly        bool
+ 	listCountries    bool
+ 	freeOnly         bool
++	json             bool
+ 	verbose          bool
+ 	// insecureSkipVerify is a test hook for self-signed lab edges; it is
+ 	// intentionally not exposed as a CLI flag.
+@@ -87,6 +89,7 @@
+ 	flag.BoolVar(&opts.usageOnly, "usage", false, "print bandwidth quota usage and exit (no proxy listeners)")
+ 	flag.BoolVar(&opts.listCountries, "list-countries", false, "print available exit countries and exit (no auth needed)")
+ 	flag.BoolVar(&opts.freeOnly, "free-only", false, "with --list-countries, hide premium-locked countries")
++	flag.BoolVar(&opts.json, "json", false, "with --list-countries, print one FFVPN_SERVER_JSON line per usable server address")
+ 	flag.BoolVar(&opts.verbose, "verbose", false, "verbose logging")
+ 	flag.Parse()
+ 
+@@ -126,6 +129,10 @@
+ 			countries = list.FreeCountries()
+ 			title = "Free-tier exit countries, premium-locked ones hidden (select with --country CODE):"
+ 		}
++		if opts.json {
++			printServers(countries)
++			return nil
++		}
+ 		printCountries(title, countries)
+ 		return nil
+ 	}
+@@ -350,6 +357,35 @@
+ 	return b
+ }
+ 
++// serverMarker prefixes one machine-readable server record. The Android client
++// reads these to probe the list for reachability and then dials the winner with
++// --server, so the address has to be exactly what this engine would connect to.
++const serverMarker = "FFVPN_SERVER_JSON "
++
++// printServers writes one marked line per connectable server address.
++func printServers(countries []servers.Country) {
++	for _, c := range countries {
++		if c.Code == "REC" {
++			continue
++		}
++		for _, city := range c.Cities {
++			for i := range city.Servers {
++				addr, err := city.Servers[i].ConnectHostPort()
++				if err != nil {
++					continue
++				}
++				payload, err := json.Marshal(map[string]any{
++					"cc": c.Code, "country": c.Name, "city": city.Name, "addr": addr,
++				})
++				if err != nil {
++					continue
++				}
++				fmt.Printf("%s%s\n", serverMarker, payload)
++			}
++		}
++	}
++}
++
+ // printCountries renders the exit-country table for --list-countries. Only
+ // non-quarantined servers count; a country showing 0 servers cannot be picked.
+ func printCountries(title string, countries []servers.Country) {

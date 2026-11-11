@@ -1,0 +1,56 @@
+--- a/main.go
++++ b/main.go
+@@ -435,8 +435,8 @@
+ 	}
+ }
+ 
+-// resolveSession picks the session source: explicit token > interactive
+-// email/password login.
++// resolveSession picks the session source: explicit token > cached token file >
++// interactive email/password login.
+ func resolveSession(opts *options) (*fxa.Session, error) {
+ 	if opts.sessionToken != "" {
+ 		if _, err := fxa.SessionAuthHeader(opts.sessionToken); err != nil {
+@@ -444,10 +444,41 @@
+ 		}
+ 		return &fxa.Session{Token: opts.sessionToken, Verified: true}, nil
+ 	}
++	if cached, err := readSessionFile(opts.sessionTokenFile); err != nil {
++		return nil, err
++	} else if cached != nil {
++		log.Printf("Using cached session token from %s", opts.sessionTokenFile)
++		return cached, nil
++	}
+ 	if opts.email != "" {
+ 		return interactiveLogin(opts)
+ 	}
+-	return nil, errors.New("no credentials: pass --session-token (64 hex chars, see README) or --email/--password")
++	return nil, errors.New("no credentials: pass --session-token (64 hex chars, see README), --session-token-file, or --email/--password")
++}
++
++// readSessionFile returns the cached session, or nil when there is none yet. A
++// file holding a stale or malformed token is treated the same way so that the
++// login path can replace it.
++func readSessionFile(path string) (*fxa.Session, error) {
++	if path == "" {
++		return nil, nil
++	}
++	data, err := os.ReadFile(path)
++	if errors.Is(err, os.ErrNotExist) {
++		return nil, nil
++	}
++	if err != nil {
++		return nil, fmt.Errorf("reading session token file: %w", err)
++	}
++	token := strings.TrimSpace(string(data))
++	if token == "" {
++		return nil, nil
++	}
++	if _, err := fxa.SessionAuthHeader(token); err != nil {
++		log.Printf("%s does not hold a session token (%v); signing in again", path, err)
++		return nil, nil
++	}
++	return &fxa.Session{Token: token, Verified: true}, nil
+ }
+ 
+ func interactiveLogin(opts *options) (*fxa.Session, error) {

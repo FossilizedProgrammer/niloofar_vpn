@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Niloofar VPN</string>
+    <string name="notification_channel">Tunnel</string>
+    <string name="notification_connecting">Building the tunnel…</string>
+    <string name="notification_connected">Tunnel is up</string>
+    <string name="notification_proxy">Proxy is running</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_continue">Continue</string>
+
+    <string name="step_reading_list">Reading the free exit list…</string>
+    <string name="step_probing">Probing %1$s exits…</string>
+    <string name="step_dialing">Connecting to %1$s…</string>
+    <string name="step_opening_tunnel">Opening the tunnel…</string>
+    <string name="step_reconnecting">Reconnecting…</string>
+
+    <string name="error_engine_missing">The tunnel engine is missing from this build.</string>
+    <string name="error_sign_in">Sign in to your Firefox Account first.</string>
+    <string name="error_no_exits">No free exits are reachable right now.</string>
+    <string name="error_no_traffic">The exit accepted the connection but carried no traffic.</string>
+    <string name="error_no_proxy">No proxy after %1$d seconds.</string>
+    <string name="error_tunnel_failed">The tunnel interface could not start.</string>
+    <string name="error_dropped">The tunnel dropped and could not be rebuilt.</string>
+
+    <string name="status_off">Not connected</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_on">Connected</string>
+    <string name="status_error">Connection failed</string>
+    <string name="status_proxy_on">Proxy running</string>
+
+    <string name="hint_off">Tap the orb to route your traffic through a free Firefox exit.</string>
+    <string name="hint_connecting">Finding the fastest exit that answers.</string>
+    <string name="hint_on">Your traffic leaves through Mozilla\'s proxy.</string>
+    <string name="hint_proxy_on">Local proxy is ready on 127.0.0.1:1080.</string>
+    <string name="share_ready">Shared on the network at %1$s</string>
+    <string name="share_ports">SOCKS %1$s · HTTP %2$s</string>
+    <string name="share_no_network">Join Wi-Fi or start a hotspot to share.</string>
+
+    <string name="cd_settings">Settings</string>
+    <string name="cd_power">Connect or disconnect</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="language_title">Language</string>
+    <string name="language_desc">Applies immediately. System follows your device language.</string>
+    <string name="language_system">System</string>
+
+    <string name="mode_title">Connection mode</string>
+    <string name="mode_vpn">VPN</string>
+    <string name="mode_vpn_desc">Route all traffic from this device through the tunnel.</string>
+    <string name="mode_proxy">Proxy</string>
+    <string name="mode_proxy_desc">Run a SOCKS/HTTP proxy for apps you configure.</string>
+    <string name="share_title">Share on network</string>
+    <string name="share_desc">Let other devices on this Wi-Fi or hotspot use the connection.</string>
+    <string name="proxy_address">Proxy address</string>
+    <string name="settings_next_connect">Changes apply on the next connection.</string>
+
+    <string name="server_title">Server</string>
+    <string name="server_desc">Choose where the traffic leaves Mozilla\'s network, or let the app use the fastest exit.</string>
+    <string name="server_auto">Automatic (fastest)</string>
+
+    <string name="account_title">Firefox Account</string>
+    <string name="account_hint">Sign in with your Firefox Account. The engine uses the credentials once to obtain a session; only the token is kept on the device.</string>
+    <string name="sign_in_with_firefox">Sign in with Firefox</string>
+    <string name="sign_in_failed">Mozilla rejected this sign-in.</string>
+    <string name="sign_in_checking">Checking the session…</string>
+    <string name="signed_in_as">Signed in as</string>
+    <string name="quota_label">Free-tier bandwidth</string>
+
+    <string name="sign_in_title">Firefox sign-in</string>
+    <string name="sign_in_hint">The email and password go to Mozilla through the bundled engine; only the session token it returns is kept on the device.</string>
+    <string name="sign_in_email">Email</string>
+    <string name="sign_in_password">Password</string>
+    <string name="sign_in_unblock">Unblock code</string>
+    <string name="sign_in_unblock_hint">Only when Mozilla emails a code because it blocked the sign-in.</string>
+    <string name="sign_in_action">Sign in</string>
+    <string name="sign_in_working">Signing in…</string>
+    <string name="sign_in_totp_title">Two-factor code</string>
+    <string name="sign_in_totp_hint">Enter the six-digit code from your authenticator app.</string>
+    <string name="sign_in_confirm">Confirm the sign-in from your email, then wait here.</string>
+    <string name="sign_in_missing">Enter the account email and password first.</string>
+
+    <string name="about_title">About</string>
+    <string name="about_core">Core: ffvpn (Go) · free exits</string>
+    <string name="about_version">Version %1$s (%2$d)</string>
+    <string name="free_tier">Free tier</string>
+    <string name="latency_format">%1$d ms</string>
+    <string name="exit_unknown">Auto exit</string>
+    <string name="exit_label">Exit</string>
+    <string name="latency_label">Latency</string>
+</resources>

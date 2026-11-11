@@ -1,0 +1,108 @@
+--- a/internal/fxa/client.go
++++ b/internal/fxa/client.go
+@@ -4,6 +4,7 @@
+ 	"bytes"
+ 	"encoding/json"
+ 	"errors"
++	"ffvpn/internal/netx"
+ 	"fmt"
+ 	"io"
+ 	"net/http"
+@@ -85,7 +86,7 @@
+ 	jar, _ := cookiejar.New(nil)
+ 	return &Client{
+ 		BaseURL: strings.TrimSuffix(baseURL, "/"),
+-		HTTP:    &http.Client{Timeout: 30 * time.Second, Jar: jar},
++		HTTP:    netx.Client(30*time.Second, jar),
+ 		jar:     jar,
+ 	}
+ }
+--- a/internal/fxa/oauth.go
++++ b/internal/fxa/oauth.go
+@@ -7,6 +7,7 @@
+ 	"encoding/base64"
+ 	"encoding/json"
+ 	"errors"
++	"ffvpn/internal/netx"
+ 	"fmt"
+ 	"io"
+ 	"net/http"
+@@ -42,7 +43,7 @@
+ 	return &OAuthClient{
+ 		BaseURL:  strings.TrimSuffix(baseURL, "/"),
+ 		ClientID: clientID,
+-		HTTP:     &http.Client{Timeout: 30 * time.Second, Jar: jar},
++		HTTP:     netx.Client(30*time.Second, jar),
+ 		jar:      jar,
+ 	}
+ }
+--- a/internal/guardian/client.go
++++ b/internal/guardian/client.go
+@@ -7,6 +7,7 @@
+ 	"encoding/base64"
+ 	"encoding/json"
+ 	"errors"
++	"ffvpn/internal/netx"
+ 	"fmt"
+ 	"io"
+ 	"net/http"
+@@ -132,7 +133,7 @@
+ func NewClient(baseURL string) *Client {
+ 	return &Client{
+ 		BaseURL: strings.TrimSuffix(baseURL, "/"),
+-		HTTP:    &http.Client{Timeout: 30 * time.Second},
++		HTTP:    netx.Client(30*time.Second, nil),
+ 	}
+ }
+ 
+--- a/internal/servers/serverlist.go
++++ b/internal/servers/serverlist.go
+@@ -6,6 +6,7 @@
+ 	"crypto/rand"
+ 	"encoding/json"
+ 	"errors"
++	"ffvpn/internal/netx"
+ 	"fmt"
+ 	"math/big"
+ 	"net/http"
+@@ -174,7 +175,7 @@
+ func NewFetcher() *Fetcher {
+ 	return &Fetcher{
+ 		URL:  defaultURL,
+-		HTTP: &http.Client{Timeout: 30 * time.Second},
++		HTTP: netx.Client(30*time.Second, nil),
+ 	}
+ }
+ 
+--- a/internal/netx/netx.go
++++ b/internal/netx/netx.go
+@@ -0,0 +1,29 @@
++// Package netx builds the HTTP clients used to reach the account side.
++package netx
++
++import (
++	"net/http"
++	"net/http/cookiejar"
++	"time"
++)
++
++// Client returns a client that keeps trying through a slow TLS handshake.
++// http.DefaultTransport gives up on the handshake after 10 seconds whatever
++// the client timeout says, and on a congested or filtered link the first
++// handshake to the auth servers regularly takes longer than that, so every
++// connect dies with "net/http: TLS handshake timeout" before the account is
++// even checked. The handshake and the response header get the same budget as
++// the request itself. jar (nil for clients that need no cookies) is installed
++// as the client's cookie jar.
++func Client(timeout time.Duration, jar *cookiejar.Jar) *http.Client {
++	transport := http.DefaultTransport.(*http.Transport).Clone()
++	transport.TLSHandshakeTimeout = timeout
++	transport.ResponseHeaderTimeout = timeout
++	client := &http.Client{Timeout: timeout, Transport: transport}
++	// Jar is an interface field: a typed-nil *cookiejar.Jar would panic the
++	// first request, so it is left unset unless there is a real jar.
++	if jar != nil {
++		client.Jar = jar
++	}
++	return client
++}

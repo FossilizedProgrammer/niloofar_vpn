@@ -1,0 +1,21 @@
+# Build outputs
+.gradle/
+build/
+app/build/
+.kotlin/
+captures/
+
+# Packaged app binaries: the CI workflow builds these, they are never committed.
+*.apk
+*.aab
+*.ap_
+dist/
+
+# Machine-specific Android SDK path
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.hprof
+.DS_Store

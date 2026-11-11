@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notification_channel">Туннель</string>
+    <string name="notification_connecting">Строим туннель…</string>
+    <string name="notification_connected">Туннель поднят</string>
+    <string name="notification_proxy">Прокси работает</string>
+    <string name="action_disconnect">Отключить</string>
+    <string name="action_sign_in">Войти</string>
+    <string name="action_sign_out">Выйти из аккаунта</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_continue">Продолжить</string>
+
+    <string name="step_reading_list">Читаем список бесплатных выходов…</string>
+    <string name="step_probing">Проверяем выходы: %1$s…</string>
+    <string name="step_dialing">Подключаемся к %1$s…</string>
+    <string name="step_opening_tunnel">Открываем туннель…</string>
+    <string name="step_reconnecting">Переподключение…</string>
+
+    <string name="error_engine_missing">В этой сборке нет движка туннеля.</string>
+    <string name="error_sign_in">Сначала войдите в аккаунт Firefox.</string>
+    <string name="error_no_exits">Сейчас нет доступных бесплатных выходов.</string>
+    <string name="error_no_traffic">Выход принял соединение, но не пропустил трафик.</string>
+    <string name="error_no_proxy">Прокси не поднялся за %1$d с.</string>
+    <string name="error_tunnel_failed">Не удалось поднять интерфейс туннеля.</string>
+    <string name="error_dropped">Туннель оборвался и не восстановился.</string>
+
+    <string name="status_off">Не подключено</string>
+    <string name="status_connecting">Подключение</string>
+    <string name="status_on">Подключено</string>
+    <string name="status_error">Ошибка подключения</string>
+    <string name="status_proxy_on">Прокси работает</string>
+
+    <string name="hint_off">Нажмите на круг, чтобы направить трафик через бесплатный выход Firefox.</string>
+    <string name="hint_connecting">Ищем самый быстрый отвечающий выход.</string>
+    <string name="hint_on">Трафик выходит через прокси Mozilla.</string>
+    <string name="hint_proxy_on">Локальный прокси готов на 127.0.0.1:1080.</string>
+    <string name="share_ready">Доступно в сети по адресу %1$s</string>
+    <string name="share_ports">SOCKS %1$s · HTTP %2$s</string>
+    <string name="share_no_network">Подключитесь к Wi-Fi или включите точку доступа.</string>
+
+    <string name="cd_settings">Настройки</string>
+    <string name="cd_power">Подключить или отключить</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="language_title">Язык</string>
+    <string name="language_desc">Применяется сразу. «Система» следует языку устройства.</string>
+    <string name="language_system">Система</string>
+
+    <string name="mode_title">Режим подключения</string>
+    <string name="mode_vpn">VPN</string>
+    <string name="mode_vpn_desc">Весь трафик устройства идёт через туннель.</string>
+    <string name="mode_proxy">Прокси</string>
+    <string name="mode_proxy_desc">SOCKS/HTTP-прокси для приложений, которые вы настроите.</string>
+    <string name="share_title">Доступ в сети</string>
+    <string name="share_desc">Разрешить другим устройствам в этой Wi-Fi сети или точке доступа пользоваться подключением.</string>
+    <string name="proxy_address">Адрес прокси</string>
+    <string name="settings_next_connect">Изменения вступят в силу при следующем подключении.</string>
+
+    <string name="server_title">Сервер</string>
+    <string name="server_desc">Выберите страну выхода из сети Mozilla или позвольте приложению взять самый быстрый выход.</string>
+    <string name="server_auto">Автоматически (самый быстрый)</string>
+
+    <string name="account_title">Аккаунт Firefox</string>
+    <string name="account_hint">Войдите в свой аккаунт Firefox. Движок один раз использует адрес и пароль, чтобы получить сессию; на устройстве остаётся только токен.</string>
+    <string name="sign_in_with_firefox">Войти через Firefox</string>
+    <string name="sign_in_failed">Mozilla отклонила этот вход.</string>
+    <string name="sign_in_checking">Проверяем сессию…</string>
+    <string name="signed_in_as">Вы вошли как</string>
+    <string name="quota_label">Бесплатный трафик</string>
+
+    <string name="sign_in_title">Вход в Firefox</string>
+    <string name="sign_in_hint">Адрес и пароль уходят в Mozilla через встроенный движок; на устройстве остаётся только полученный токен сессии.</string>
+    <string name="sign_in_email">Эл. почта</string>
+    <string name="sign_in_password">Пароль</string>
+    <string name="sign_in_unblock">Код разблокировки</string>
+    <string name="sign_in_unblock_hint">Только если Mozilla пришлёт код из-за блокировки входа.</string>
+    <string name="sign_in_action">Войти</string>
+    <string name="sign_in_working">Вход…</string>
+    <string name="sign_in_totp_title">Код двухфакторной проверки</string>
+    <string name="sign_in_totp_hint">Введите шестизначный код из приложения-аутентификатора.</string>
+    <string name="sign_in_confirm">Подтвердите вход из письма и подождите здесь.</string>
+    <string name="sign_in_missing">Сначала введите адрес и пароль аккаунта.</string>
+
+    <string name="about_title">О приложении</string>
+    <string name="about_core">Ядро: ffvpn (Go) · бесплатные выходы</string>
+    <string name="about_version">Версия %1$s (%2$d)</string>
+    <string name="free_tier">Бесплатно</string>
+    <string name="latency_format">%1$d мс</string>
+    <string name="exit_unknown">Автовыход</string>
+    <string name="exit_label">Выход</string>
+    <string name="latency_label">Задержка</string>
+</resources>
