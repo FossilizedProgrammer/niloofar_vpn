@@ -74,13 +74,15 @@ artefacto `NiloofarVPN-apks`. Los binarios nunca viven en el repositorio.
 
 | Archivo | ABI |
 | --- | --- |
-| `dist/NiloofarVPN-1.1.0-armeabi-v7a.apk` | ARM de 32 bits |
-| `dist/NiloofarVPN-1.1.0-arm64-v8a.apk` | ARM de 64 bits |
-| `dist/NiloofarVPN-1.1.0-universal.apk` | ambas |
+| `dist/NiloofarVPN-1.1.1-armeabi-v7a.apk` | ARM de 32 bits |
+| `dist/NiloofarVPN-1.1.1-arm64-v8a.apk` | ARM de 64 bits |
+| `dist/NiloofarVPN-1.1.1-universal.apk` | ambas |
 
-Las compilaciones de versión se firman con el almacén de depuración para que se
-instalen tal cual; antes de publicar, cambia `signingConfig` en
-`app/build.gradle.kts` por un almacén real.
+Todas las compilaciones de versión se firman con la clave fija
+`signing/niloofar.keystore`, así que cada compilación —local o de CI— se instala
+encima de la anterior. Los APK de las versiones hasta la 1.1.0 se firmaban con
+una clave que se generaba de nuevo en cada ejecución de CI; si tienes uno
+instalado, desinstálalo una vez antes de instalar la 1.1.1.
 
 ### Dependencias y red
 

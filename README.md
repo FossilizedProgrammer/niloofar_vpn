@@ -69,13 +69,14 @@ Binaries never live in the repository.
 
 | File | ABI |
 | --- | --- |
-| `dist/NiloofarVPN-1.1.0-armeabi-v7a.apk` | 32-bit ARM |
-| `dist/NiloofarVPN-1.1.0-arm64-v8a.apk` | 64-bit ARM |
-| `dist/NiloofarVPN-1.1.0-universal.apk` | both |
+| `dist/NiloofarVPN-1.1.1-armeabi-v7a.apk` | 32-bit ARM |
+| `dist/NiloofarVPN-1.1.1-arm64-v8a.apk` | 64-bit ARM |
+| `dist/NiloofarVPN-1.1.1-universal.apk` | both |
 
-Release builds are signed with the debug keystore so they install as-is;
-replace `signingConfig` in `app/build.gradle.kts` with a real keystore before
-publishing.
+Release builds are signed with the fixed key in `signing/niloofar.keystore`, so
+every build — local or CI — installs over the previous one. APKs from releases
+up to 1.1.0 were signed with a throwaway key generated on each CI run; if one of
+those is already installed, uninstall it once before installing 1.1.1.
 
 ### Dependencies and network
 

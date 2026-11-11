@@ -73,12 +73,14 @@ push به `main` ریلیز **Latest build** را به‌روز می‌کند و
 
 | فایل | معماری |
 | --- | --- |
-| `dist/NiloofarVPN-1.1.0-armeabi-v7a.apk` | ARM ۳۲بیتی |
-| `dist/NiloofarVPN-1.1.0-arm64-v8a.apk` | ARM ۶۴بیتی |
-| `dist/NiloofarVPN-1.1.0-universal.apk` | هر دو |
+| `dist/NiloofarVPN-1.1.1-armeabi-v7a.apk` | ARM ۳۲بیتی |
+| `dist/NiloofarVPN-1.1.1-arm64-v8a.apk` | ARM ۶۴بیتی |
+| `dist/NiloofarVPN-1.1.1-universal.apk` | هر دو |
 
-ساخت‌های ریلیز با کلید دیباگ امضا می‌شوند تا مستقیم نصب شوند؛ پیش از انتشار
-`signingConfig` را در `app/build.gradle.kts` با کلید واقعی عوض کنید.
+همهٔ ساخت‌های ریلیز با کلید ثابت `signing/niloofar.keystore` امضا می‌شوند، پس
+هر بیلد — محلی یا CI — روی نسخهٔ قبلی نصب می‌شود. APKهای ریلیزهای تا 1.1.0 با
+کلیدی امضا شده بودند که هر بار در CI از نو ساخته می‌شد؛ اگر یکی از آن‌ها نصب
+است، یک بار حذفش کنید و بعد 1.1.1 را نصب کنید.
 
 ### وابستگی‌ها و شبکه
 

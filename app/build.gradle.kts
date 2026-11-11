@@ -11,8 +11,20 @@ android {
         applicationId = "com.ffvpn.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.1.1"
+    }
+
+    // A fixed key kept in the repo. Every build, local or CI, signs with the
+    // same certificate, so a new APK updates over an installed one instead of
+    // failing with INSTALL_FAILED_UPDATE_INCOMPATIBLE.
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("signing/niloofar.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     // One APK per CPU family plus a universal one that runs anywhere.
@@ -33,8 +45,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Installable as-is; swap in a real keystore before publishing.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 

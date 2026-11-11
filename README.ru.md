@@ -75,13 +75,15 @@ pull request и тег. Push в `main` обновляет релиз **Latest bu
 
 | Файл | ABI |
 | --- | --- |
-| `dist/NiloofarVPN-1.1.0-armeabi-v7a.apk` | 32-битный ARM |
-| `dist/NiloofarVPN-1.1.0-arm64-v8a.apk` | 64-битный ARM |
-| `dist/NiloofarVPN-1.1.0-universal.apk` | оба |
+| `dist/NiloofarVPN-1.1.1-armeabi-v7a.apk` | 32-битный ARM |
+| `dist/NiloofarVPN-1.1.1-arm64-v8a.apk` | 64-битный ARM |
+| `dist/NiloofarVPN-1.1.1-universal.apk` | оба |
 
-Релизные сборки подписаны отладочным ключом, чтобы ставиться сразу; перед
-публикацией замените `signingConfig` в `app/build.gradle.kts` на настоящий
-ключ.
+Все релизные сборки подписаны постоянным ключом `signing/niloofar.keystore`,
+поэтому каждая сборка — локальная или в CI — ставится поверх предыдущей. APK
+релизов до 1.1.0 подписывались ключом, который создавался заново при каждом
+запуске CI; если такой APK уже установлен, удалите его один раз, а затем
+установите 1.1.1.
 
 ### Зависимости и сеть
 
