@@ -45,6 +45,10 @@ class LanternCore : VpnCore {
     @Volatile
     private var candidates: List<RadianceCandidate> = emptyList()
 
+    /** True while the user pinned one server: it is redialled, never replaced. */
+    @Volatile
+    private var manual = false
+
     private lateinit var prefs: LanternStore
     private val lock = Any()
 
@@ -71,6 +75,14 @@ class LanternCore : VpnCore {
             stopping = false
             connected = false
             emit(1002, "connecting", "")
+
+            val pinned = ServerChoice.pinnedLantern(appContext)
+            manual = pinned != null
+            if (pinned != null) {
+                candidates = listOf(RadianceCandidate(pinned, 0))
+                AppState.log("engine $id pinned to ${pinned.tag} by the user")
+                return attemptFrom(0, TOTAL_BUDGET_MS)
+            }
 
             val listed = LanternServers.fetch(binary, workDir, stop = { stopping }) { AppState.log(it) }
             if (stopping) return null
@@ -107,9 +119,10 @@ class LanternCore : VpnCore {
                 break
             }
             val server = candidate.server
+            val latencyNote = if (candidate.latencyMs > 0) " (${candidate.latencyMs}ms)" else ""
             AppState.log(
-                "engine $id dialing ${server.tag} [${server.protocol} ${server.country}] " +
-                    "(${candidate.latencyMs}ms) ${index + 1}/${candidates.size}"
+                "engine $id dialing ${server.tag} [${server.protocol} ${server.country}]$latencyNote " +
+                    "${index + 1}/${candidates.size}"
             )
             emit(1002, "dialing ${server.protocol} ${server.country}", "")
             val wait = remaining.coerceAtMost(PER_SERVER_MS)
@@ -173,10 +186,13 @@ class LanternCore : VpnCore {
             runCatching { child.waitFor() }
             synchronized(lock) {
                 if (stopping || process !== child) return@synchronized
-                AppState.log("engine $id tunnel process exited, moving to next server")
+                AppState.log(
+                    "engine $id tunnel process exited, " +
+                        if (manual) "redialling the chosen server" else "moving to next server"
+                )
                 connected = false
                 emit(1002, "reconnecting", "")
-                val error = attemptFrom(from + 1, TOTAL_BUDGET_MS)
+                val error = attemptFrom(if (manual) from else from + 1, TOTAL_BUDGET_MS)
                 if (!stopping && error != null) {
                     AppState.log("engine $id fallback failed: $error")
                     emit(2106, "reconnect failed", error)

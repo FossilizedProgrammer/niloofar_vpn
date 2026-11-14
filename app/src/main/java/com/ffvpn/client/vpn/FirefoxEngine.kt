@@ -39,24 +39,31 @@ class FirefoxEngine(private val context: Context) {
     /**
      * Blocking. Returns null on success, otherwise a human-readable error.
      * [onStage] receives the same stage names the other cores report, so the
-     * service can show one kind of progress line for every engine.
+     * service can show one kind of progress line for every engine. A [pinned]
+     * exit is dialled alone: no list refresh, no probing, no fallback.
      */
-    fun connect(onStage: (String) -> Unit): String? {
+    fun connect(onStage: (String) -> Unit, pinned: Server? = null): String? {
         stopping = false
         if (!binary.exists()) return context.getString(R.string.error_engine_missing)
         if (!Store.hasSession(context)) return context.getString(R.string.error_sign_in)
 
-        onStage("reading list")
-        var servers = ServerList.fetch(binary, Store.cacheFile(context)) { stopping }
-        if (stopping) return null
-        if (servers.isEmpty()) servers = ServerList.readCache(Store.cacheFile(context))
-        if (servers.isEmpty()) return context.getString(R.string.error_no_exits)
+        val ranked: List<Candidate>
+        if (pinned != null) {
+            Logs.add("vpn", "dialing the chosen server ${pinned.label}")
+            ranked = listOf(Candidate(pinned, Health.Alive, 0))
+        } else {
+            onStage("reading list")
+            var servers = ServerList.fetch(binary, Store.cacheFile(context)) { stopping }
+            if (stopping) return null
+            if (servers.isEmpty()) servers = ServerList.readCache(Store.cacheFile(context))
+            if (servers.isEmpty()) return context.getString(R.string.error_no_exits)
 
-        onStage("checking servers")
-        val ranked = ServerList
-            .rank(ServerList.probe(servers) { stopping }, Store.lastServer(context))
-            .take(MAX_CANDIDATES)
-        if (ranked.isEmpty()) return context.getString(R.string.error_no_exits)
+            onStage("checking servers")
+            ranked = ServerList
+                .rank(ServerList.probe(servers) { stopping }, Store.lastServer(context))
+                .take(MAX_CANDIDATES)
+            if (ranked.isEmpty()) return context.getString(R.string.error_no_exits)
+        }
 
         var lastError: String? = null
         for (candidate in ranked) {
@@ -67,7 +74,8 @@ class FirefoxEngine(private val context: Context) {
             if (error == null) {
                 selected = candidate
                 Store.setLastServer(context, candidate.server.address)
-                Logs.add("vpn", "using ${candidate.server.label} (${candidate.latencyMs} ms)")
+                val latencyNote = if (candidate.latencyMs > 0) " (${candidate.latencyMs} ms)" else ""
+                Logs.add("vpn", "using ${candidate.server.label}$latencyNote")
                 return null
             }
             lastError = error

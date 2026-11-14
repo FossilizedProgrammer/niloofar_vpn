@@ -98,6 +98,80 @@ object Texts {
         else -> id
     }
 
+    val serverLabel: String
+        get() = p("Server", "سرور", "Сервер", "Servidor")
+
+    fun serverTitle(core: String): String = p(
+        "$core server",
+        "سرور $core",
+        "Сервер $core",
+        "Servidor de $core",
+        "$core 服务器"
+    )
+
+    val serverAuto: String
+        get() = p(
+            "Auto — fastest working server",
+            "خودکار — سریع‌ترین سرور سالم",
+            "Авто — самый быстрый рабочий сервер",
+            "Auto: el servidor funcional más rápido"
+        )
+
+    val serverHint: String
+        get() = p(
+            "Auto checks the list and picks the fastest server that works. A chosen server is dialled on its own; if it fails, the connection fails instead of switching to another.",
+            "حالت خودکار فهرست را بررسی می‌کند و سریع‌ترین سرور سالم را برمی‌گزیند. " +
+                "سرور انتخاب‌شده به‌تنهایی شماره‌گیری می‌شود؛ اگر وصل نشود، اتصال شکست می‌خورد و سرور دیگری امتحان نمی‌شود.",
+            "Авто проверяет список и выбирает самый быстрый рабочий сервер. Выбранный сервер используется один: если он не сработает, соединение завершится ошибкой, а не переключением на другой.",
+            "Auto revisa la lista y elige el servidor funcional más rápido. El servidor elegido se marca por sí solo; si falla, la conexión falla en lugar de cambiar a otro."
+        )
+
+    val serverHintSstp: String
+        get() = p(
+            "The relay list comes from the built-in file or the VPN Gate card in Config tools.",
+            "فهرست رله‌ها از فایل داخلی برنامه یا کارت «سرورهای sstp وی‌پی‌ان گیت» در ابزارهای تنظیمات می‌آید.",
+            "Список релеев берётся из встроенного файла или карточки «SSTP-серверы VPN Gate» в инструментах настройки.",
+            "La lista de relés viene del archivo integrado o de la tarjeta «Servidores VPN Gate SSTP» en las herramientas de configuración."
+        )
+
+    val serverRefresh: String
+        get() = p("Refresh & test", "تازه‌سازی و تست", "Обновить и проверить", "Actualizar y probar")
+
+    val serverRefreshing: String
+        get() = p(
+            "Testing servers…",
+            "در حال بررسی سرورها…",
+            "Проверяем серверы…",
+            "Probando servidores…"
+        )
+
+    val serverEmpty: String
+        get() = p(
+            "No servers yet. Refresh the list.",
+            "هنوز سروری نیست. فهرست را تازه کنید.",
+            "Серверов пока нет. Обновите список.",
+            "Aún no hay servidores. Actualiza la lista."
+        )
+
+    val serverNoneReachable: String
+        get() = p(
+            "No reachable servers right now.",
+            "در حال حاضر سرور در دسترسی نیست.",
+            "Сейчас нет доступных серверов.",
+            "Ahora mismo no hay servidores accesibles."
+        )
+
+    fun serverTested(count: Int): String = p(
+        "$count reachable servers, fastest first",
+        "$count سرور در دسترس، سریع‌ترین اول",
+        "Доступных серверов: $count, быстрые первыми",
+        "$count ${es(count, "servidor accesible", "servidores accesibles")}, el más rápido primero",
+        "$count 个可达服务器，按速度排序"
+    )
+
+    val serverUnreachable: String
+        get() = p("unreachable", "در دسترس نیست", "недоступен", "no disponible")
+
     val engineMissing: String
         get() = p(
             "This core is not available on this device.",

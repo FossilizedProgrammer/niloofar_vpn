@@ -144,6 +144,19 @@ object Prefs {
             prefs().edit().putInt(KEY_HTTP_PORT, value.coerceIn(MIN_PORT, MAX_PORT)).apply()
         }
 
+    /** The server the user pinned for [coreId]; empty means Auto. */
+    fun server(coreId: String): String = prefs().getString("server_$coreId", "").orEmpty()
+
+    /** Kept with the key so the choice can be shown before the list is read again. */
+    fun serverLabel(coreId: String): String = prefs().getString("server_label_$coreId", "").orEmpty()
+
+    fun setServer(coreId: String, key: String, label: String) {
+        prefs().edit()
+            .putString("server_$coreId", key)
+            .putString("server_label_$coreId", label)
+            .apply()
+    }
+
     val socksAddress: String get() = "$LOOPBACK:$socksPort"
     val httpAddress: String get() = "$LOOPBACK:$httpPort"
 }

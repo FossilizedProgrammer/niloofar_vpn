@@ -1,5 +1,6 @@
 package com.ffvpn.client.core
 
+import android.content.Context
 import android.os.SystemClock
 import java.io.File
 import java.net.InetSocketAddress
@@ -38,6 +39,11 @@ object LanternServers {
     private const val LIST_TIMEOUT_MS = 150_000L
     private const val TCP_TIMEOUT_MS = 5_000
     private const val CONCURRENCY = 8
+
+    fun workDir(context: Context): File = File(context.applicationContext.filesDir, "lantern")
+
+    fun binary(context: Context): File =
+        File(context.applicationContext.applicationInfo.nativeLibraryDir, "liblantern.so")
 
     fun cacheFile(workDir: File): File = File(workDir, CACHE_FILE)
 

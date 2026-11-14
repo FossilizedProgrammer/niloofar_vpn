@@ -31,6 +31,17 @@ private val ZH = mapOf(
     "Lantern" to "Lantern",
     "Firefox" to "Firefox",
     "Tor" to "Tor",
+    "Server" to "服务器",
+    "Auto — fastest working server" to "自动 — 最快的可用服务器",
+    "Auto checks the list and picks the fastest server that works. A chosen server is dialled on its own; if it fails, the connection fails instead of switching to another." to
+        "自动模式会检查列表并选择最快的可用服务器。选定的服务器将单独拨号；若失败，连接会报错而不会切换到其他服务器。",
+    "The relay list comes from the built-in file or the VPN Gate card in Config tools." to
+        "中继列表来自内置文件或配置工具中的「VPN Gate SSTP 服务器」卡片。",
+    "Refresh & test" to "刷新并测试",
+    "Testing servers…" to "正在测试服务器…",
+    "No servers yet. Refresh the list." to "暂无服务器。请刷新列表。",
+    "No reachable servers right now." to "当前没有可达的服务器。",
+    "unreachable" to "不可达",
     "This core is not available on this device." to "此内核在该设备上不可用。",
     "No working route was found. Check the network and try again." to "未找到可用线路。请检查网络后重试。",
     "The core is downloading server information. The first connection takes a while, please wait." to

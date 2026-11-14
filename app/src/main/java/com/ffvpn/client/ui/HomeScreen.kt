@@ -85,6 +85,7 @@ import com.ffvpn.client.core.AppState
 import com.ffvpn.client.core.CoreRegistry
 import com.ffvpn.client.core.GithubUpdates
 import com.ffvpn.client.core.Prefs
+import com.ffvpn.client.core.ServerChoice
 import com.ffvpn.client.core.StatusText
 import com.ffvpn.client.vpn.Store
 import kotlinx.coroutines.delay
@@ -133,6 +134,13 @@ fun HomeScreen(
             TopBar(onOpenTools, onOpenSettings)
             Spacer(Modifier.height(14.dp))
             CorePicker(state, enabled = !state.running && !state.busy && !state.disconnecting)
+            if (ServerChoice.supports(state.coreId)) {
+                Spacer(Modifier.height(10.dp))
+                ServerChip(
+                    coreId = state.coreId,
+                    enabled = !state.running && !state.busy && !state.disconnecting
+                )
+            }
             Spacer(Modifier.height(20.dp))
             Orb(phase = phase, accent = accent, onClick = onToggle)
             Spacer(Modifier.height(20.dp))

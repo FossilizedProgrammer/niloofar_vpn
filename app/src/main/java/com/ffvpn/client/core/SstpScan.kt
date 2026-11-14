@@ -118,15 +118,30 @@ object SstpScanner {
     /** One fast refusal is not proof a relay is gone; the second look decides. */
     private const val RETRY_PAUSE_MS = 400L
 
-    /** Minimal TLS 1.2 ClientHello with no SNI and no cipher suites. */
-    private val CLIENT_HELLO = intArrayOf(
-        0x16, 0x03, 0x01, 0x00, 0x37, 0x01, 0x00, 0x00, 0x00, 0x03, 0x03,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02,
-        0x00, 0xff, 0x01, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x04, 0x00,
-        0x02, 0x00, 0x00
-    ).map { it.toByte() }.toByteArray()
+    /**
+     * A well-formed TLS ClientHello, assembled so every length field is right.
+     * The earlier hand-written one declared a shorter record than it sent and
+     * offered no cipher suite; current SoftEther relays answer that with
+     * silence, so a working relay looked TCP-only and the picker hid it. A real
+     * suite list makes every TLS listener answer at once — ServerHello or alert,
+     * either byte proves the port speaks TLS.
+     */
+    private val CLIENT_HELLO: ByteArray = run {
+        fun u16(value: Int) = byteArrayOf((value shr 8).toByte(), value.toByte())
+        fun ext(type: Int, data: ByteArray) = u16(type) + u16(data.size) + data
+        val suites = u16(0x1301) + u16(0x1302) + u16(0x1303) +
+            u16(0xc02f) + u16(0xc030) + u16(0xc02b) + u16(0xc02c) +
+            u16(0x009c) + u16(0x009d) + u16(0x002f) + u16(0x0035) + u16(0x00ff)
+        val extensions = ext(0x002b, byteArrayOf(4, 0x03, 0x04, 0x03, 0x03)) +
+            ext(0x000a, u16(4) + u16(0x001d) + u16(0x0017)) +
+            ext(0x000b, byteArrayOf(1, 0)) +
+            ext(0x000d, u16(8) + u16(0x0403) + u16(0x0503) + u16(0x0603) + u16(0x0804))
+        val body = byteArrayOf(0x03, 0x03) + ByteArray(32) + byteArrayOf(0) +
+            u16(suites.size) + suites + byteArrayOf(1, 0) +
+            u16(extensions.size) + extensions
+        val handshake = byteArrayOf(1, 0) + u16(body.size) + body
+        byteArrayOf(0x16, 0x03, 0x01) + u16(handshake.size) + handshake
+    }
 
     @Volatile
     private var cachedEndpoints: List<SstpEndpoint>? = null

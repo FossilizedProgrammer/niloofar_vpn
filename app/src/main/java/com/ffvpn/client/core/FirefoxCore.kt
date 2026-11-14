@@ -64,7 +64,10 @@ class FirefoxCore : VpnCore {
         val child = FirefoxEngine(ctx)
         engine = child
         emit(1002, "connecting", "")
-        val error = child.connect { stage -> if (!stopping) emit(1002, stage, "") }
+        val error = child.connect(
+            { stage -> if (!stopping) emit(1002, stage, "") },
+            ServerChoice.pinnedFirefox(ctx)
+        )
         if (stopping) return null
         if (!error.isNullOrBlank()) return error
         val chosen = child.selected

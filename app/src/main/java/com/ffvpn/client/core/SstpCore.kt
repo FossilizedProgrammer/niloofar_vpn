@@ -44,6 +44,10 @@ class SstpCore : VpnCore {
     @Volatile
     private var candidates: List<SstpCandidate> = emptyList()
 
+    /** True while the user pinned one relay: it is redialled, never replaced. */
+    @Volatile
+    private var manual = false
+
     private lateinit var prefs: SstpStore
     private val lock = Any()
 
@@ -71,6 +75,14 @@ class SstpCore : VpnCore {
             stopping = false
             connected = false
             emit(1002, "connecting", "")
+
+            val pinned = ServerChoice.pinnedSstp()
+            manual = pinned != null
+            if (pinned != null) {
+                candidates = listOf(SstpCandidate(pinned, SstpHealth.Alive, 0))
+                AppState.log("engine $id pinned to $pinned by the user")
+                return attemptFrom(0, TOTAL_BUDGET_MS)
+            }
 
             val endpoints = SstpScanner.loadEndpoints(appContext)
             val scanned = SstpScanner.scan(endpoints, stop = { stopping }) { AppState.log(it) }
@@ -106,10 +118,13 @@ class SstpCore : VpnCore {
                 lastError = "candidate budget exhausted"
                 break
             }
+            val note = if (manual) {
+                "chosen by the user"
+            } else {
+                "${candidate.health.name.lowercase()}, ${candidate.latencyMs}ms"
+            }
             AppState.log(
-                "engine $id dialing ${candidate.endpoint} " +
-                    "(${candidate.health.name.lowercase()}, ${candidate.latencyMs}ms) " +
-                    "${index + 1}/${candidates.size}"
+                "engine $id dialing ${candidate.endpoint} ($note) ${index + 1}/${candidates.size}"
             )
             emit(1002, "dialing ${candidate.endpoint}", "")
             val wait = remaining.coerceAtMost(PER_SERVER_MS)
@@ -181,10 +196,13 @@ class SstpCore : VpnCore {
             runCatching { child.waitFor() }
             synchronized(lock) {
                 if (stopping || process !== child) return@synchronized
-                AppState.log("engine $id tunnel process exited, moving to next relay")
+                AppState.log(
+                    "engine $id tunnel process exited, " +
+                        if (manual) "redialling the chosen relay" else "moving to next relay"
+                )
                 connected = false
                 emit(1002, "reconnecting", "")
-                val error = attemptFrom(from + 1, TOTAL_BUDGET_MS)
+                val error = attemptFrom(if (manual) from else from + 1, TOTAL_BUDGET_MS)
                 if (!stopping && error != null) {
                     AppState.log("engine $id fallback failed: $error")
                     emit(2106, "reconnect failed", error)
