@@ -39,7 +39,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import com.ffvpn.client.ui.FirefoxVpnTheme
+import com.ffvpn.client.ui.NiloofarTheme
 import com.ffvpn.client.vpn.Logs
 import com.ffvpn.client.vpn.ServerList
 import com.ffvpn.client.vpn.Store
@@ -65,11 +65,16 @@ class WebSignInActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
+    override fun onResume() {
+        super.onResume()
+        AppLocale.sync(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val startEmail = Store.email(this).orEmpty()
         setContent {
-            FirefoxVpnTheme {
+            NiloofarTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     WebSignInScreen(
                         startEmail = startEmail,

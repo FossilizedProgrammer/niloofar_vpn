@@ -57,9 +57,6 @@
     <string name="proxy_address">Proxy address</string>
     <string name="settings_next_connect">Changes apply on the next connection.</string>
 
-    <string name="server_title">Server</string>
-    <string name="server_desc">Choose where the traffic leaves Mozilla\'s network, or let the app use the fastest exit.</string>
-    <string name="server_auto">Automatic (fastest)</string>
 
     <string name="account_title">Firefox Account</string>
     <string name="account_hint">Sign in with your Firefox Account. The engine uses the credentials once to obtain a session; only the token is kept on the device.</string>
@@ -124,8 +121,16 @@
     <string name="about_core">Core: ffvpn (Go) · free exits</string>
     <string name="about_version">Version %1$s (%2$d)</string>
     <string name="free_tier">Free tier</string>
-    <string name="latency_format">%1$d ms</string>
-    <string name="exit_unknown">Auto exit</string>
-    <string name="exit_label">Exit</string>
-    <string name="latency_label">Latency</string>
+
+    <string name="selection_copy">Copy</string>
+    <string name="selection_cut">Cut</string>
+    <string name="selection_paste">Paste</string>
+    <string name="selection_select_all">Select all</string>
+
+    <string name="update_check">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_current">No version newer than %1$s was found. Builds with the same version number are not compared; see the release page.</string>
+    <string name="update_available">Version %1$s is available.</string>
+    <string name="update_get">Open the release page</string>
+    <string name="update_failed">GitHub could not be reached. Try again, with the tunnel on if the network needs it.</string>
 </resources>

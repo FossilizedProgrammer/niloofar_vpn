@@ -14,6 +14,9 @@ dist/
 # Machine-specific Android SDK path
 local.properties
 
+# Local agent scratch space
+.freebuff/
+
 # IDE
 .idea/
 *.iml

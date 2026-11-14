@@ -4,6 +4,9 @@ import android.content.Context
 import android.os.SystemClock
 import android.util.Log
 import com.ffvpn.client.R
+import com.ffvpn.client.core.CaBundle
+import com.ffvpn.client.core.EngineProc
+import com.ffvpn.client.core.Prefs
 import java.io.File
 
 /**
@@ -35,28 +38,21 @@ class FirefoxEngine(private val context: Context) {
 
     /**
      * Blocking. Returns null on success, otherwise a human-readable error.
-     * [share] opens the listeners on the LAN so other devices can use them.
+     * [onStage] receives the same stage names the other cores report, so the
+     * service can show one kind of progress line for every engine.
      */
-    fun connect(share: Boolean, onStep: (Step, String?) -> Unit): String? {
+    fun connect(onStage: (String) -> Unit): String? {
         stopping = false
         if (!binary.exists()) return context.getString(R.string.error_engine_missing)
         if (!Store.hasSession(context)) return context.getString(R.string.error_sign_in)
 
-        onStep(Step.ReadingList, null)
+        onStage("reading list")
         var servers = ServerList.fetch(binary, Store.cacheFile(context)) { stopping }
         if (stopping) return null
         if (servers.isEmpty()) servers = ServerList.readCache(Store.cacheFile(context))
         if (servers.isEmpty()) return context.getString(R.string.error_no_exits)
 
-        // A chosen country narrows the list; if its exits vanished the whole
-        // list is still better than no tunnel at all.
-        val wanted = Store.country(context)
-        if (wanted.isNotBlank()) {
-            val inCountry = servers.filter { it.country.equals(wanted, ignoreCase = true) }
-            if (inCountry.isNotEmpty()) servers = inCountry
-        }
-
-        onStep(Step.Probing, servers.size.toString())
+        onStage("checking servers")
         val ranked = ServerList
             .rank(ServerList.probe(servers) { stopping }, Store.lastServer(context))
             .take(MAX_CANDIDATES)
@@ -65,8 +61,8 @@ class FirefoxEngine(private val context: Context) {
         var lastError: String? = null
         for (candidate in ranked) {
             if (stopping) return null
-            onStep(Step.Dialing, candidate.server.label)
-            val error = runCandidate(candidate, share)
+            onStage("dialing ${candidate.server.label}")
+            val error = runCandidate(candidate)
             if (stopping) return null
             if (error == null) {
                 selected = candidate
@@ -82,21 +78,18 @@ class FirefoxEngine(private val context: Context) {
     }
 
     /** Starts the engine for one exit and proves traffic through it. */
-    private fun runCandidate(candidate: Candidate, share: Boolean): String? {
+    private fun runCandidate(candidate: Candidate): String? {
         destroyChild()
         listening = false
         lastLine = ""
 
-        val host = if (share) "0.0.0.0" else "127.0.0.1"
+        val port = Prefs.socksPort
         val args = mutableListOf(
             binary.absolutePath,
             "--session-token-file", Store.sessionFile(context).absolutePath,
             "--server", candidate.server.address,
-            "--socks", "$host:$SOCKS_PORT"
+            "--socks", "127.0.0.1:$port"
         )
-        // A second listener speaks HTTP CONNECT, which is what most devices and
-        // apps accept as a proxy without extra software.
-        if (share) args += listOf("--http", "$host:$HTTP_PORT")
 
         val builder = ProcessBuilder(args)
             .directory(workDir)
@@ -114,7 +107,7 @@ class FirefoxEngine(private val context: Context) {
         val startedAt = SystemClock.elapsedRealtime()
         while (!stopping) {
             if (listening) {
-                if (Traffic.serves(SOCKS_PORT, TRAFFIC_TIMEOUT_MS)) return null
+                if (Traffic.serves(port, TRAFFIC_TIMEOUT_MS)) return null
                 destroyChild()
                 return context.getString(R.string.error_no_traffic)
             }
@@ -168,15 +161,13 @@ class FirefoxEngine(private val context: Context) {
     private fun destroyChild() {
         val process = child ?: return
         child = null
-        EngineProc.shutdown(process)
+        EngineProc.shutdown(process, { Logs.add("vpn", it) }, "ffvpn")
         lastLine = ""
         listening = false
     }
 
     private companion object {
         const val TAG = "ffvpn"
-        const val SOCKS_PORT = 1080
-        const val HTTP_PORT = 1081
         const val MAX_CANDIDATES = 8
         // The engine dials an exit for up to 30 s and its account calls can time
         // out twice before that, so a short window drops exits that still work.

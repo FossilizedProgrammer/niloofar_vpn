@@ -1,9 +1,10 @@
-package com.ffvpn.client.vpn
+package com.ffvpn.client.core
 
 import android.content.Context
 import java.io.File
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
+import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
@@ -45,12 +46,20 @@ object CaBundle {
         return onDisk != null
     }
 
+    /** Absolute path of the extracted bundle, or "none" before [prepare]. */
+    fun path(): String = onDisk?.absolutePath ?: "none"
+
     /** Environment for an engine process. */
     fun env(): Map<String, String> =
         onDisk?.let { mapOf(ENV to it.absolutePath) } ?: emptyMap()
 
     fun applyTo(builder: ProcessBuilder) {
         env().forEach { (key, value) -> builder.environment()[key] = value }
+    }
+
+    /** The Kotlin side's trust store, for connections that verify. */
+    fun applyTo(connection: HttpsURLConnection) {
+        connection.sslSocketFactory = socketFactory()
     }
 
     fun socketFactory(): SSLSocketFactory =

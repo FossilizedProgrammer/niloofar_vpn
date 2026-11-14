@@ -1,5 +1,8 @@
 package com.ffvpn.client.vpn
 
+import com.ffvpn.client.core.CaBundle
+import com.ffvpn.client.core.EngineProc
+
 import android.os.SystemClock
 import android.util.Log
 import org.json.JSONArray
@@ -18,7 +21,12 @@ data class Server(
     val city: String,
     val address: String
 ) {
-    val label: String get() = if (city.isBlank()) countryName else "$countryName / $city"
+    val label: String
+        get() = if (city.isBlank() || city.equals(countryName, ignoreCase = true)) {
+            countryName
+        } else {
+            "$countryName / $city"
+        }
 }
 
 /**
@@ -69,7 +77,7 @@ object ServerList {
             }
             if (SystemClock.elapsedRealtime() - startedAt > LIST_TIMEOUT_MS) break
         }
-        EngineProc.stopOnce(child)
+        EngineProc.stopOnce(child, { Logs.add("vpn", it) }, "ffvpn")
         val exits = seen.values.toList()
         if (exits.isEmpty()) return readCache(cache)
         writeCache(cache, exits)
@@ -205,11 +213,11 @@ object ServerList {
                 onLine(line)
             }
             if (SystemClock.elapsedRealtime() - startedAt > LOGIN_TIMEOUT_MS) {
-                EngineProc.stopOnce(child)
+                EngineProc.stopOnce(child, { Logs.add("vpn", it) }, "ffvpn")
                 return "Sign-in timed out"
             }
         }
-        EngineProc.stopOnce(child)
+        EngineProc.stopOnce(child, { Logs.add("vpn", it) }, "ffvpn")
         val code = runCatching { child.exitValue() }.getOrNull()
         if (hasSession(workDir) && code == 0) {
             Logs.add("sign-in", "session accepted")

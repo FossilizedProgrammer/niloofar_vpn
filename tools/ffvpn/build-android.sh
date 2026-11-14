@@ -14,19 +14,46 @@
 #     the app execs it from nativeLibraryDir.
 set -e
 
-SRC=${FFVPN_SRC:-/home/me/prg/firefox-vpn-go}
-SCRATCH=${SCRATCH:-/tmp/ffvpn-android}
-NDKROOT=${NDKROOT:-/home/me/android-sdk/ndk/26.3.11579264}
+case "${1:-}" in
+    -h|--help)
+        printf '%s\n' \
+            'Usage: ./tools/ffvpn/build-android.sh' \
+            'Rebuilds only the Firefox native engine for ARM32 and ARM64.' \
+            'Use ./tools/build-apks.sh to package the complete multicore app.' \
+            'Defaults: sibling firefox-vpn-go sources and Android SDK NDK 26.3.11579264.' \
+            'Optional overrides: FFVPN_SRC, ANDROID_HOME, ANDROID_NDK_HOME, NDKROOT.'
+        exit 0
+        ;;
+esac
+[ "$#" -eq 0 ] || { printf '%s\n' 'Unexpected arguments; use --help.' >&2; exit 2; }
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+PROJECT=$(cd "$HERE/../.." && pwd)
+SRC=${FFVPN_SRC:-$PROJECT/../firefox-vpn-go}
+SDK=${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}
+if [ -z "$SDK" ] && [ -f "$PROJECT/local.properties" ]; then
+    SDK=$(sed -n 's/^sdk.dir=//p' "$PROJECT/local.properties")
+fi
+NDKROOT=${NDKROOT:-${ANDROID_NDK_HOME:-${SDK:+$SDK/ndk/26.3.11579264}}}
 NDK=$NDKROOT/toolchains/llvm/prebuilt/linux-x86_64/bin
 API=26
-HERE=$(cd "$(dirname "$0")" && pwd)
-OUT=$(cd "$HERE/../.." && pwd)/app/src/main/jniLibs
+OUT=$PROJECT/app/src/main/jniLibs
 
-if [ ! -f "$SCRATCH/go.mod" ]; then
-    echo "Copying $SRC to $SCRATCH"
-    mkdir -p "$SCRATCH"
-    (cd "$SRC" && tar --exclude=./.git -cf - .) | (cd "$SCRATCH" && tar xf -)
-fi
+[ -s "$SRC/go.mod" ] || { printf 'Firefox Go sources not found: %s\n' "$SRC" >&2; exit 1; }
+[ -n "$NDKROOT" ] || { printf '%s\n' 'Android SDK not found; configure sdk.dir in local.properties.' >&2; exit 1; }
+for tool in armv7a-linux-androideabi26-clang aarch64-linux-android26-clang llvm-strip; do
+    [ -x "$NDK/$tool" ] || { printf 'Missing NDK tool: %s\n' "$NDK/$tool" >&2; exit 1; }
+done
+for tool in go patch tar; do
+    command -v "$tool" >/dev/null 2>&1 || { printf 'Missing build tool: %s\n' "$tool" >&2; exit 1; }
+done
+
+# A fresh copy prevents stale sources and patches from leaking into a rebuild.
+SCRATCH=$(mktemp -d "${TMPDIR:-/tmp}/niloofar-ffvpn.XXXXXX")
+trap 'rm -rf "$SCRATCH"' 0
+trap 'exit 1' HUP INT TERM
+printf 'Copying %s to %s\n' "$SRC" "$SCRATCH"
+(cd "$SRC" && tar --exclude=./.git -cf - .) | (cd "$SCRATCH" && tar xf -)
 
 # The deviations from upstream, kept as patches because the source checkout
 # is only ever read from:
@@ -74,9 +101,13 @@ build() {
     goarm=$4
     echo "Building $abi"
     mkdir -p "$OUT/$abi"
-    env GOOS=android GOARCH=$goarch CGO_ENABLED=1 CC=$NDK/${prefix}${API}-clang \
+    # Android 15+ on a 16 KB-page kernel refuses to load a segment aligned to
+    # less than 16384, and Go's android/arm64 default is still 4 KB.
+    env GOOS=android GOARCH=$goarch CGO_ENABLED=1 CC="$NDK/${prefix}${API}-clang" \
         ${goarm:+GOARM=$goarm} \
-        go build -C "$SCRATCH" -trimpath -ldflags="-s -w" -o "$OUT/$abi/libffvpn.so.tmp" .
+        go build -C "$SCRATCH" -trimpath \
+        -ldflags="-s -w -extldflags=-Wl,-z,max-page-size=16384" \
+        -o "$OUT/$abi/libffvpn.so.tmp" .
     "$NDK/llvm-strip" -o "$OUT/$abi/libffvpn.so" "$OUT/$abi/libffvpn.so.tmp"
     rm -f "$OUT/$abi/libffvpn.so.tmp"
     ls -l "$OUT/$abi/libffvpn.so"

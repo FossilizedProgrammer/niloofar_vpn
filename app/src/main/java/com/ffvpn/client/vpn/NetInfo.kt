@@ -1,5 +1,7 @@
 package com.ffvpn.client.vpn
 
+import com.ffvpn.client.core.Prefs
+import com.ffvpn.client.service.LanShare
 import java.net.Inet4Address
 import java.net.NetworkInterface
 
@@ -16,8 +18,9 @@ object NetInfo {
             ?.hostAddress
     }.getOrNull()
 
-    /** "192.168.43.1:1080" for LAN clients, or null when there is no LAN. */
-    fun shareAddress(): String? = lanAddress()?.let { "$it:${PORTS.first()}" }
+    /** "192.168.43.1:1081" for LAN clients, or null when there is no LAN. */
+    fun shareAddress(): String? = lanAddress()?.let { "$it:${LanShare.PORT}" }
 
-    val PORTS = listOf(1080, 1081)
+    /** "192.168.43.1:8080", the HTTP front that binds every interface while sharing. */
+    fun shareHttpAddress(): String? = lanAddress()?.let { "$it:${Prefs.httpPort}" }
 }

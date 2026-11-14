@@ -56,9 +56,6 @@
     <string name="proxy_address">Адрес прокси</string>
     <string name="settings_next_connect">Изменения вступят в силу при следующем подключении.</string>
 
-    <string name="server_title">Сервер</string>
-    <string name="server_desc">Выберите страну выхода из сети Mozilla или позвольте приложению взять самый быстрый выход.</string>
-    <string name="server_auto">Автоматически (самый быстрый)</string>
 
     <string name="account_title">Аккаунт Firefox</string>
     <string name="account_hint">Войдите в свой аккаунт Firefox. Движок один раз использует адрес и пароль, чтобы получить сессию; на устройстве остаётся только токен.</string>
@@ -123,8 +120,16 @@
     <string name="about_core">Ядро: ffvpn (Go) · бесплатные выходы</string>
     <string name="about_version">Версия %1$s (%2$d)</string>
     <string name="free_tier">Бесплатно</string>
-    <string name="latency_format">%1$d мс</string>
-    <string name="exit_unknown">Автовыход</string>
-    <string name="exit_label">Выход</string>
-    <string name="latency_label">Задержка</string>
+
+    <string name="selection_copy">Копировать</string>
+    <string name="selection_cut">Вырезать</string>
+    <string name="selection_paste">Вставить</string>
+    <string name="selection_select_all">Выбрать всё</string>
+
+    <string name="update_check">Проверить обновления</string>
+    <string name="update_checking">Проверка…</string>
+    <string name="update_current">Версия новее %1$s не найдена. Сборки с одинаковым номером не сравниваются; смотрите страницу релизов.</string>
+    <string name="update_available">Доступна версия %1$s.</string>
+    <string name="update_get">Открыть страницу релиза</string>
+    <string name="update_failed">GitHub недоступен. Попробуйте ещё раз; если сеть требует, включите туннель.</string>
 </resources>

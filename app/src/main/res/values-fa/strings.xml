@@ -56,9 +56,6 @@
     <string name="proxy_address">آدرس پروکسی</string>
     <string name="settings_next_connect">تغییرات در اتصال بعدی اعمال می‌شود.</string>
 
-    <string name="server_title">سرور</string>
-    <string name="server_desc">انتخاب کنید ترافیک از کدام کشور موزیلا خارج شود، یا برنامه سریع‌ترین خروجی را انتخاب کند.</string>
-    <string name="server_auto">خودکار (سریع‌ترین)</string>
 
     <string name="account_title">حساب فایرفاکس</string>
     <string name="account_hint">با حساب فایرفاکس خود وارد شوید. هسته ایمیل و گذرواژه را یک‌بار برای گرفتن نشست به کار می‌برد و تنها رمز نشست روی دستگاه نگه داشته می‌شود.</string>
@@ -123,8 +120,16 @@
     <string name="about_core">هسته: ffvpn (Go) · خروجی رایگان</string>
     <string name="about_version">نسخه %1$s (%2$d)</string>
     <string name="free_tier">رایگان</string>
-    <string name="latency_format">%1$d میلی‌ثانیه</string>
-    <string name="exit_unknown">خروجی خودکار</string>
-    <string name="exit_label">خروجی</string>
-    <string name="latency_label">تأخیر</string>
+
+    <string name="selection_copy">کپی</string>
+    <string name="selection_cut">برش</string>
+    <string name="selection_paste">چسباندن</string>
+    <string name="selection_select_all">انتخاب همه</string>
+
+    <string name="update_check">بررسی نسخهٔ جدید</string>
+    <string name="update_checking">در حال بررسی…</string>
+    <string name="update_current">نسخه‌ای جدیدتر از %1$s پیدا نشد. بیلدهای هم‌شماره مقایسه نمی‌شوند؛ صفحهٔ انتشار را ببینید.</string>
+    <string name="update_available">نسخهٔ %1$s منتشر شده است.</string>
+    <string name="update_get">صفحهٔ انتشار</string>
+    <string name="update_failed">به گیت‌هاب نرسید. دوباره امتحان کنید؛ اگر شبکه نیاز دارد، تونل را روشن کنید.</string>
 </resources>

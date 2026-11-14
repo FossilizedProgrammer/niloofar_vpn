@@ -18,10 +18,8 @@ object Store {
     private const val KEY_EMAIL = "email"
     private const val KEY_QUOTA = "quota"
     private const val KEY_LAST = "last_server"
-    private const val KEY_MODE = "mode"
     private const val KEY_SHARE = "share"
     private const val KEY_LANGUAGE = "language"
-    private const val KEY_COUNTRY = "country"
     private const val KEY_ACCOUNTS = "accounts"
     private const val KEY_ACTIVE = "active_account"
 
@@ -63,15 +61,6 @@ object Store {
         writeAccounts(context, list)
     }
 
-    fun mode(context: Context): Mode = when (prefs(context).getString(KEY_MODE, null)) {
-        "proxy" -> Mode.Proxy
-        else -> Mode.Vpn
-    }
-
-    fun setMode(context: Context, mode: Mode) {
-        prefs(context).edit().putString(KEY_MODE, mode.name.lowercase()).apply()
-    }
-
     /** BCP-47 tag of the chosen UI language; empty means follow the system. */
     fun language(context: Context): String = prefs(context).getString(KEY_LANGUAGE, "").orEmpty()
 
@@ -83,13 +72,6 @@ object Store {
 
     fun setShare(context: Context, value: Boolean) {
         prefs(context).edit().putBoolean(KEY_SHARE, value).apply()
-    }
-
-    /** Country code of the chosen exit; empty means the app picks the fastest. */
-    fun country(context: Context): String = prefs(context).getString(KEY_COUNTRY, "").orEmpty()
-
-    fun setCountry(context: Context, value: String) {
-        prefs(context).edit().putString(KEY_COUNTRY, value).apply()
     }
 
     fun lastServer(context: Context): String? = prefs(context).getString(KEY_LAST, null)

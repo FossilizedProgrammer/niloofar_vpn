@@ -56,9 +56,6 @@
     <string name="proxy_address">Dirección del proxy</string>
     <string name="settings_next_connect">Los cambios se aplican en la próxima conexión.</string>
 
-    <string name="server_title">Servidor</string>
-    <string name="server_desc">Elige por qué país sale el tráfico de la red de Mozilla, o deja que la app use la salida más rápida.</string>
-    <string name="server_auto">Automático (la más rápida)</string>
 
     <string name="account_title">Cuenta de Firefox</string>
     <string name="account_hint">Inicia sesión con tu cuenta de Firefox. El motor usa el correo y la contraseña una vez para obtener la sesión; en el dispositivo solo se guarda el token.</string>
@@ -123,8 +120,16 @@
     <string name="about_core">Núcleo: ffvpn (Go) · salidas gratuitas</string>
     <string name="about_version">Versión %1$s (%2$d)</string>
     <string name="free_tier">Gratis</string>
-    <string name="latency_format">%1$d ms</string>
-    <string name="exit_unknown">Salida automática</string>
-    <string name="exit_label">Salida</string>
-    <string name="latency_label">Latencia</string>
+
+    <string name="selection_copy">Copiar</string>
+    <string name="selection_cut">Cortar</string>
+    <string name="selection_paste">Pegar</string>
+    <string name="selection_select_all">Seleccionar todo</string>
+
+    <string name="update_check">Buscar actualizaciones</string>
+    <string name="update_checking">Buscando…</string>
+    <string name="update_current">No se encontró una versión posterior a %1$s. Las compilaciones con el mismo número no se comparan; consulta la página de versiones.</string>
+    <string name="update_available">Hay una versión %1$s disponible.</string>
+    <string name="update_get">Abrir la página de la versión</string>
+    <string name="update_failed">No se pudo conectar con GitHub. Inténtalo de nuevo; si la red lo necesita, activa el túnel.</string>
 </resources>

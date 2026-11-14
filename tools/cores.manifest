@@ -1,0 +1,27 @@
+# sha256 of every prebuilt native library shipped in app/src/main/jniLibs.
+# Paths are relative to that directory; verify with ./tools/build-apks.sh --check.
+# Regenerate after replacing a core: ./tools/build-apks.sh --update-manifest
+91c984e44c0084592c82b3727076ce263248d293f3e7e2f20f01d1a98f2191dc  armeabi-v7a/libaether.so
+bb3d5ddd8eacf7420853f6aab30c2627aa6e9ccf338f8008c5b9138d682bef39  armeabi-v7a/libc2tun.so
+63a0ec9b3434ee37e6d28a7114952e204b4a43c0bc41a3581cf0123741d718e9  armeabi-v7a/libffvpn.so
+0425f5be8a0bf77c811c7cf3c6d6c1ae3754fa415389fed4fc4ba15d4f70dd1b  armeabi-v7a/liblantern.so
+ac2196f504769b8657c151af2d7cc4e95c4b27d9fb64b155c6e5a0d3fc0deb9c  armeabi-v7a/liblyrebird.so
+7200f5394fbf265d990ff703dd7fe628341c74e4a8849809e64099be12d81d24  armeabi-v7a/libsstp.so
+eb96a7af30abb60a184e107c99f558055f93b577948df526ee91e6eca5b5b325  armeabi-v7a/libsunlion.so
+f6ae75f74631447b7043c0ba1a762a7fe5ce2eae3712b2628b5d5b5f7d493224  armeabi-v7a/libsunlionbridge.so
+143bc62f94c64ec87f5bb841f34faa19607c40d6ab1d6aba29ea6e21cf781736  armeabi-v7a/libtor.so
+36928a2f7caad65bce3dc74be4afc5bec47029eacf305777ac9a5f73e588f6eb  armeabi-v7a/libtorrunner.so
+1c36661a7b06d79f9b5caeaefc68a50d33d47bfe437ac082e699498a5b326c13  arm64-v8a/libaether.so
+5ae5b5317b40be4b966d9156ccc5e8be31327f51cef8ae0fc33d645e2ec6fc9f  arm64-v8a/libc2tun.so
+4dba4a0fc95e2e5ced949e025fb9058b9e914990b12fbfb7764afa5f6cb0a7e6  arm64-v8a/libffvpn.so
+002a15961408abcf5bda9af194f3317e0876c0be7dc61cdf8b4ecc2d4feb7dc0  arm64-v8a/liblantern.so
+302dc1269bc880914db5b61ca54b50990e30b60727f8161d9150a2802537b006  arm64-v8a/liblyrebird.so
+361a76f5ce925287b21aa58e209dc2ce95abc7a4a266d93fe72922952d066bcb  arm64-v8a/libsstp.so
+79f99204bf1cf6720c5f6f5f7a22a740099cd62c432e15490beb46ed94606b9b  arm64-v8a/libsunlion.so
+ebdafc9b8d6f07663b53c7f5866a05e26b4a6115cafe043d4719be2537deeb77  arm64-v8a/libsunlionbridge.so
+25fb2bb6b7f23db1f7f56eb8444cae365ccdfe75dfa803f72c6bbaad03db63a2  arm64-v8a/libtor.so
+92a50c14fd233e612960e1083b828c43dc248122f56b18552f70da422cb0e686  arm64-v8a/libtorrunner.so
+
+# Build provenance from `go version -m`, informational only:
+# armeabi-v7a/libsunlion.so: go1.26.8 	build	-buildmode=c-shared 	build	-compiler=gc 	build	-trimpath=true 	build	CGO_ENABLED=1 	build	GOARCH=arm 	build	GOOS=android 	build	GOARM=7 
+# arm64-v8a/libsunlion.so: go1.26.8 	build	-buildmode=c-shared 	build	-compiler=gc 	build	-trimpath=true 	build	CGO_ENABLED=1 	build	GOARCH=arm64 	build	GOOS=android 	build	GOARM64=v8.0 

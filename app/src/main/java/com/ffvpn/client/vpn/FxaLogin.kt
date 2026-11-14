@@ -1,5 +1,8 @@
 package com.ffvpn.client.vpn
 
+import com.ffvpn.client.core.CaBundle
+import com.ffvpn.client.core.EngineProc
+
 import android.os.SystemClock
 import android.util.Log
 import java.io.File
@@ -35,7 +38,7 @@ class FxaLogin(private val binary: File, private val workDir: File) {
         cancelled = true
         val process = child ?: return
         child = null
-        EngineProc.stopOnce(process)
+        EngineProc.stopOnce(process, { Logs.add("vpn", it) }, "ffvpn")
     }
 
     /** Blocking. Returns null once a token is cached, otherwise what went wrong. */
@@ -118,7 +121,7 @@ class FxaLogin(private val binary: File, private val workDir: File) {
             problem = t.message ?: t.javaClass.simpleName
         } finally {
             child = null
-            EngineProc.stopOnce(process)
+            EngineProc.stopOnce(process, { Logs.add("vpn", it) }, "ffvpn")
         }
 
         val token = runCatching { session.readText().trim() }.getOrDefault("")

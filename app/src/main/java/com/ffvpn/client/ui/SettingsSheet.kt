@@ -5,12 +5,14 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,19 +21,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,33 +47,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import android.widget.Toast
 import com.ffvpn.client.AppLocale
 import com.ffvpn.client.BuildConfig
 import com.ffvpn.client.R
+import com.ffvpn.client.Texts
 import com.ffvpn.client.WebSignInActivity
-import com.ffvpn.client.vpn.Mode
+import com.ffvpn.client.core.AppState
+import com.ffvpn.client.core.CoreRegistry
+import com.ffvpn.client.core.GithubUpdates
+import com.ffvpn.client.core.Prefs
+import com.ffvpn.client.core.TorBridges
 import com.ffvpn.client.vpn.LogLine
 import com.ffvpn.client.vpn.Logs
 import com.ffvpn.client.vpn.NetInfo
-import com.ffvpn.client.vpn.Phase
-import com.ffvpn.client.vpn.Server
 import com.ffvpn.client.vpn.ServerList
 import com.ffvpn.client.vpn.Store
-import com.ffvpn.client.vpn.VpnState
-import com.ffvpn.client.vpn.VpnUi
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsSheet(
-    ui: VpnUi,
+    state: AppState.State,
     onDismiss: () -> Unit,
+    onOpenTools: () -> Unit,
     onSignedIn: () -> Unit,
     onSignedOut: () -> Unit
 ) {
@@ -81,28 +89,40 @@ fun SettingsSheet(
     var error by remember { mutableStateOf<String?>(null) }
     var accounts by remember { mutableStateOf(Store.accounts(context)) }
     var language by remember { mutableStateOf(AppLocale.current(context)) }
-    var country by remember { mutableStateOf(Store.country(context)) }
-    var exits by remember { mutableStateOf<List<Server>>(emptyList()) }
-    val countries = remember(exits) {
-        exits.distinctBy { it.country }
-            .sortedBy { it.countryName.lowercase() }
-            .map { it.country to it.countryName }
+    var shareLan by remember { mutableStateOf(Prefs.shareLan) }
+    var connectSound by remember { mutableStateOf(Prefs.connectSound) }
+    var autoRetry by remember { mutableStateOf(Prefs.autoRetry) }
+    var torBridges by remember { mutableStateOf(Prefs.torUseBridges) }
+    var psiphonConduit by remember { mutableStateOf(Prefs.psiphonConduit) }
+    var coreId by remember { mutableStateOf(state.coreId.ifBlank { CoreRegistry.default().id }) }
+    var socksPort by remember { mutableStateOf(Prefs.socksPort.toString()) }
+    var httpPort by remember { mutableStateOf(Prefs.httpPort.toString()) }
+    var portsError by remember { mutableStateOf<String?>(null) }
+    var torStatus by remember { mutableStateOf("") }
+    var torRunning by remember { mutableStateOf(false) }
+    var customBridges by remember {
+        mutableStateOf(TorBridges.custom(context).joinToString("\n") { it.line })
     }
+    var bridgeCount by remember { mutableStateOf(TorBridges.all(context).size) }
+    // Lines the last scan found reachable, so they can be pinned to the user's
+    // own list — a later scan replaces its own file but never that one.
+    var scannedBridges by remember { mutableStateOf(emptyList<String>()) }
+    val torStop = remember { AtomicBoolean(false) }
+    val running = state.running || state.connected || state.busy || state.disconnecting
 
-    LaunchedEffect(Unit) {
-        val cached = withContext(Dispatchers.IO) {
-            ServerList.readCache(Store.cacheFile(context))
-        }
-        if (cached.isNotEmpty()) exits = cached
-        val binary = Store.binary(context)
-        if (binary.exists()) {
-            val fresh = withContext(Dispatchers.IO) {
-                runCatching {
-                    ServerList.fetch(binary, Store.cacheFile(context)) { false }
-                }.getOrDefault(emptyList())
-            }
-            if (fresh.isNotEmpty()) exits = fresh
-        }
+    /**
+     * The field is the only place a typed bridge exists until it is written
+     * down, so turning the switch on, or leaving the sheet, keeps it. Without
+     * this the line was silently dropped and Tor kept using the scanned list.
+     */
+    fun keepTypedBridges(): Boolean {
+        val typed = customBridges.trim()
+        if (typed.isEmpty()) return false
+        if (typed == TorBridges.custom(context).joinToString("\n") { it.line }.trim()) return false
+        val result = TorBridges.saveCustom(context, typed)
+        torStatus = Texts.bridgesSaved(result.accepted, result.rejected)
+        bridgeCount = TorBridges.all(context).size
+        return result.accepted > 0
     }
 
     // Validates a token with the engine: it proves the session against the
@@ -112,8 +132,6 @@ fun SettingsSheet(
             busy = true
             error = null
             var quota = ""
-            // The page reports the session as soon as the password is accepted,
-            // before any code it still asks for; Mozilla then has to confirm it.
             var problem: String? = null
             var attempt = 0
             while (attempt < VERIFY_ATTEMPTS) {
@@ -161,352 +179,522 @@ fun SettingsSheet(
     }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            keepTypedBridges()
+            onDismiss()
+        },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 22.dp)
-                .padding(bottom = 32.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
+        ProvideAppTextToolbar {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
             Text(
-                text = stringResource(R.string.settings_title),
+                text = Texts.settings,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
 
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.language_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.language_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    AppLocale.choices.forEach { (tag, label) ->
-                        ChoiceRow(
-                            label = if (tag == AppLocale.SYSTEM) {
-                                stringResource(R.string.language_system)
-                            } else {
-                                label
-                            },
-                            selected = language == tag
-                        ) {
-                            language = tag
-                            (context as? Activity)?.let { AppLocale.apply(it, tag) }
-                        }
-                    }
-                }
-            }
-
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 12.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.server_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.server_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            Section(stringResource(R.string.language_title), stringResource(R.string.language_desc)) {
+                AppLocale.choices.forEach { (tag, label) ->
                     ChoiceRow(
-                        label = stringResource(R.string.server_auto),
-                        selected = country.isBlank()
+                        label = if (tag == AppLocale.SYSTEM) {
+                            stringResource(R.string.language_system)
+                        } else {
+                            label
+                        },
+                        selected = language == tag
                     ) {
-                        country = ""
-                        Store.setCountry(context, "")
-                    }
-                    countries.forEach { (code, name) ->
-                        ChoiceRow(
-                            label = name.ifBlank { code.uppercase() },
-                            selected = country.equals(code, ignoreCase = true)
-                        ) {
-                            country = code
-                            Store.setCountry(context, code)
-                        }
+                        language = tag
+                        AppLocale.apply(context, tag)
                     }
                 }
             }
 
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.mode_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        ModeOption(
-                            title = R.string.mode_vpn,
-                            subtitle = R.string.mode_vpn_desc,
-                            selected = ui.mode == Mode.Vpn,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Store.setMode(context, Mode.Vpn)
-                            VpnState.update { it.copy(mode = Mode.Vpn) }
-                        }
-                        ModeOption(
-                            title = R.string.mode_proxy,
-                            subtitle = R.string.mode_proxy_desc,
-                            selected = ui.mode == Mode.Proxy,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Store.setMode(context, Mode.Proxy)
-                            VpnState.update { it.copy(mode = Mode.Proxy) }
-                        }
-                    }
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(R.string.share_title),
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                            Text(
-                                text = stringResource(R.string.share_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = ui.share,
-                            onCheckedChange = { enabled ->
-                                Store.setShare(context, enabled)
-                                VpnState.update { it.copy(share = enabled) }
-                            }
-                        )
-                    }
-                    if (ui.share) {
-                        val address = NetInfo.shareAddress()
-                        Text(
-                            text = if (address != null) {
-                                stringResource(R.string.share_ready, address) + " · " +
-                                    stringResource(R.string.share_ports, "1080", "1081")
-                            } else {
-                                stringResource(R.string.share_no_network)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.tertiary
-                        )
-                    }
-                    if (ui.phase != Phase.Off) {
-                        Text(
-                            text = stringResource(R.string.settings_next_connect),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+            Section(Texts.core, Texts.coreHint) {
+                CoreRegistry.all().forEach { core ->
+                    ChoiceRow(
+                        label = Texts.coreName(core.id),
+                        selected = coreId == core.id,
+                        enabled = !running
+                    ) {
+                        coreId = core.id
+                        Prefs.coreId = core.id
+                        AppState.update { it.copy(coreId = core.id) }
                     }
                 }
-            }
-
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
+                if (running) {
                     Text(
-                        text = stringResource(R.string.account_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-
-                    Text(
-                        text = stringResource(
-                            if (accounts.isEmpty()) R.string.account_none else R.string.account_hint
-                        ),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.settings_next_connect),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
 
-                    accounts.forEach { saved ->
-                        AccountRow(
-                            email = saved.email,
-                            quota = saved.quota,
-                            active = saved.email.equals(ui.email, ignoreCase = true) && ui.signedIn,
-                            enabled = !busy,
-                            onUse = {
-                                Store.activateAccount(context, saved.email)
-                                error = null
-                                accounts = Store.accounts(context)
-                                onSignedIn()
-                            },
-                            onRemove = {
-                                Store.removeAccount(context, saved.email)
-                                error = null
-                                accounts = Store.accounts(context)
-                                if (Store.accounts(context).isEmpty()) onSignedOut() else onSignedIn()
-                            }
-                        )
+            Section(Texts.mode, Texts.modeHint) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ModeOption(
+                        title = Texts.modeShort(AppState.Mode.VPN),
+                        subtitle = stringResource(R.string.mode_vpn_desc),
+                        selected = state.mode == AppState.Mode.VPN,
+                        enabled = !running,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Prefs.mode = AppState.Mode.VPN
+                        AppState.update { it.copy(mode = AppState.Mode.VPN) }
                     }
-
-                    if (accounts.isNotEmpty() && ui.phase != Phase.Off) {
-                        Text(
-                            text = stringResource(R.string.account_switch_note),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    ModeOption(
+                        title = Texts.modeShort(AppState.Mode.PROXY),
+                        subtitle = stringResource(R.string.mode_proxy_desc),
+                        selected = state.mode == AppState.Mode.PROXY,
+                        enabled = !running,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Prefs.mode = AppState.Mode.PROXY
+                        AppState.update { it.copy(mode = AppState.Mode.PROXY) }
                     }
+                }
+            }
 
-                    error?.let {
+            Section(Texts.ports, Texts.portsHint) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedTextField(
+                        value = socksPort,
+                        onValueChange = { socksPort = it.filter(Char::isDigit).take(5) },
+                        label = { Text(Texts.socksPortLabel) },
+                        enabled = !running,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = httpPort,
+                        onValueChange = { httpPort = it.filter(Char::isDigit).take(5) },
+                        label = { Text(Texts.httpPortLabel) },
+                        enabled = !running,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    portsError?.let {
                         Text(
                             text = it,
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.weight(1f)
                         )
-                    }
-
-                    Button(
+                    } ?: Spacer(Modifier.weight(1f))
+                    TextButton(
+                        enabled = !running,
                         onClick = {
-                            error = null
-                            browser.launch(Intent(context, WebSignInActivity::class.java))
-                        },
-                        enabled = !busy,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        if (busy) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                            Spacer(Modifier.size(10.dp))
+                            val socks = socksPort.toIntOrNull()
+                            val http = httpPort.toIntOrNull()
+                            if (socks == null || http == null || socks == http ||
+                                socks !in Prefs.MIN_PORT..Prefs.MAX_PORT ||
+                                http !in Prefs.MIN_PORT..Prefs.MAX_PORT
+                            ) {
+                                portsError = Texts.portInvalid
+                            } else {
+                                Prefs.socksPort = socks
+                                Prefs.httpPort = http
+                                portsError = null
+                            }
                         }
-                        Text(
-                            stringResource(
-                                when {
-                                    busy -> R.string.sign_in_checking
-                                    accounts.isEmpty() -> R.string.sign_in_with_firefox
-                                    else -> R.string.account_add
-                                }
-                            )
-                        )
-                    }
+                    ) { Text(Texts.continueLabel) }
                 }
             }
 
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+            Section(Texts.share, Texts.shareHint) {
+                SwitchRow(Texts.shareSwitch, Texts.shareHint, shareLan) {
+                    shareLan = it
+                    Prefs.shareLan = it
+                    AppState.update { copy -> copy.copy(shareLan = it) }
+                }
+                if (shareLan) {
+                    val socks = NetInfo.shareAddress()
+                    val http = NetInfo.shareHttpAddress()
                     Text(
-                        text = stringResource(R.string.log_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.log_desc),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    val lines by Logs.lines.collectAsState()
-                    Text(
-                        text = if (lines.isEmpty()) {
-                            stringResource(R.string.log_empty)
+                        text = if (socks != null && http != null) {
+                            Texts.shareAddress(socks) + "\n" + Texts.shareHttpAddress(http) + "\n" +
+                                Texts.proxyDetail(Prefs.socksAddress, Prefs.httpAddress)
                         } else {
-                            stringResource(R.string.log_size, lines.size, logSize(lines))
+                            stringResource(R.string.share_no_network)
                         },
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.tertiary
                     )
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Button(
-                            onClick = {
-                                copyLog(context)
-                                Toast.makeText(context, R.string.log_copied, Toast.LENGTH_SHORT).show()
-                            },
-                            enabled = lines.isNotEmpty(),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.log_copy))
-                        }
-                        TextButton(
-                            onClick = { Logs.clear() },
-                            enabled = lines.isNotEmpty(),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.log_clear))
-                        }
-                    }
+                }
+                if (running) {
+                    Text(
+                        text = stringResource(R.string.settings_next_connect),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
-            Surface(
-                shape = RoundedCornerShape(22.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+            Section(Texts.alerts, null) {
+                SwitchRow(Texts.soundSwitch, Texts.soundHint, connectSound) {
+                    connectSound = it
+                    Prefs.connectSound = it
+                }
+                SwitchRow(Texts.autoRetry, Texts.autoRetryHint, autoRetry) {
+                    autoRetry = it
+                    Prefs.autoRetry = it
+                }
+            }
+
+            Section(Texts.psiphonConduit, Texts.psiphonConduitHint) {
+                SwitchRow(
+                    Texts.psiphonConduitSwitch,
+                    Texts.psiphonConduitSwitchHint,
+                    psiphonConduit
                 ) {
+                    psiphonConduit = it
+                    Prefs.psiphonConduit = it
+                }
+                if (running) {
                     Text(
-                        text = stringResource(R.string.about_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = stringResource(R.string.about_core),
-                        style = MaterialTheme.typography.bodySmall,
+                        text = stringResource(R.string.settings_next_connect),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+            }
+
+            Section(Texts.torBridges, Texts.torBridgesHint) {
+                SwitchRow(Texts.torBridgesSwitch, Texts.torBridgesSwitchHint, torBridges) {
+                    torBridges = it
+                    Prefs.torUseBridges = it
+                    // Tor only reads its bridges at startup, so the entered
+                    // lines have to be on disk before the switch can matter.
+                    if (it) keepTypedBridges()
+                }
+                if (running) {
                     Text(
-                        text = stringResource(
-                            R.string.about_version,
-                            BuildConfig.VERSION_NAME,
-                            BuildConfig.VERSION_CODE
-                        ),
+                        text = stringResource(R.string.settings_next_connect),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = Texts.bridgeCount(bridgeCount, TorBridges.custom(context).size),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            if (!torRunning) {
+                                torStop.set(false)
+                                torRunning = true
+                                torStatus = Texts.scanningBridges
+                                scope.launch {
+                                    val result = withContext(Dispatchers.IO) {
+                                        TorBridges.scan(context, { torStop.get() }) { Logs.add("tor", it) }
+                                    }
+                                    val stored = TorBridges.all(context).size
+                                    torStatus = Texts.bridgeScanStored(
+                                        Texts.bridgeScanResult(result.reachable.size, result.total),
+                                        stored
+                                    )
+                                    bridgeCount = stored
+                                    scannedBridges = result.reachable.map { it.line }
+                                    torRunning = false
+                                }
+                            } else {
+                                torStop.set(true)
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(if (torRunning) Texts.stopScan else Texts.scanBridges)
+                    }
+                }
+                if (torStatus.isNotBlank()) {
+                    Text(
+                        text = torStatus,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                OutlinedTextField(
+                    value = customBridges,
+                    onValueChange = { customBridges = it },
+                    label = { Text(Texts.customBridges) },
+                    minLines = 2,
+                    maxLines = 5,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(
+                    text = Texts.customBridgesHint,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                TextButton(
+                    onClick = {
+                        val raw = customBridges.ifBlank { scannedBridges.joinToString("\n") }
+                        val result = TorBridges.saveCustom(context, raw)
+                        torStatus = Texts.bridgesSaved(result.accepted, result.rejected)
+                        bridgeCount = TorBridges.all(context).size
+                        if (customBridges.isBlank()) scannedBridges = emptyList()
+                    },
+                    enabled = customBridges.isNotBlank() || scannedBridges.isNotEmpty()
+                ) { Text(Texts.saveBridges) }
+            }
+
+            Section(stringResource(R.string.account_title), stringResource(R.string.account_hint)) {
+                if (accounts.isEmpty()) {
+                    Text(
+                        text = stringResource(R.string.account_none),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+                val active = Store.activeAccount(context)?.email
+                accounts.forEach { saved ->
+                    AccountRow(
+                        email = saved.email,
+                        quota = saved.quota,
+                        active = saved.email.equals(active, ignoreCase = true) && Store.hasSession(context),
+                        enabled = !busy,
+                        onUse = {
+                            Store.activateAccount(context, saved.email)
+                            error = null
+                            accounts = Store.accounts(context)
+                            onSignedIn()
+                        },
+                        onRemove = {
+                            Store.removeAccount(context, saved.email)
+                            error = null
+                            accounts = Store.accounts(context)
+                            if (Store.accounts(context).isEmpty()) onSignedOut() else onSignedIn()
+                        }
+                    )
+                }
+                if (accounts.isNotEmpty() && running) {
+                    Text(
+                        text = stringResource(R.string.account_switch_note),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                error?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+                Button(
+                    onClick = {
+                        error = null
+                        browser.launch(Intent(context, WebSignInActivity::class.java))
+                    },
+                    enabled = !busy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (busy) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(Modifier.size(10.dp))
+                    }
+                    Text(
+                        stringResource(
+                            when {
+                                busy -> R.string.sign_in_checking
+                                accounts.isEmpty() -> R.string.sign_in_with_firefox
+                                else -> R.string.account_add
+                            }
+                        )
+                    )
+                }
+            }
+
+            Section(Texts.tools, Texts.toolsBody) {
+                Button(onClick = onOpenTools, modifier = Modifier.fillMaxWidth()) {
+                    Text(Texts.tools)
+                }
+            }
+
+            Section(stringResource(R.string.log_title), stringResource(R.string.log_desc)) {
+                val lines by Logs.lines.collectAsState()
+                Text(
+                    text = if (lines.isEmpty()) {
+                        stringResource(R.string.log_empty)
+                    } else {
+                        stringResource(R.string.log_size, lines.size, logSize(lines))
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.tertiary
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Button(
+                        onClick = {
+                            copyLog(context)
+                            Toast.makeText(context, R.string.log_copied, Toast.LENGTH_SHORT).show()
+                        },
+                        enabled = lines.isNotEmpty(),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.log_copy)) }
+                    TextButton(
+                        onClick = { Logs.clear() },
+                        enabled = lines.isNotEmpty(),
+                        modifier = Modifier.weight(1f)
+                    ) { Text(stringResource(R.string.log_clear)) }
+                }
+            }
+
+            Section(stringResource(R.string.about_title), null) {
+                Text(
+                    text = Texts.aboutBody,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = stringResource(
+                        R.string.about_version,
+                        BuildConfig.VERSION_NAME,
+                        BuildConfig.VERSION_CODE
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = Texts.aboutHint,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                UpdateCheck()
+            }
             }
         }
     }
+}
 
+@Composable
+private fun UpdateCheck() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var checking by remember { mutableStateOf(false) }
+    var release by remember { mutableStateOf<GithubUpdates.Release?>(null) }
+    var failed by remember { mutableStateOf(false) }
+    val newer = release?.let { GithubUpdates.compareVersions(it.version, BuildConfig.VERSION_NAME) > 0 } == true
+
+    OutlinedButton(
+        enabled = !checking,
+        onClick = {
+            scope.launch {
+                checking = true
+                failed = false
+                release = null
+                try {
+                    release = GithubUpdates.check()
+                    GithubUpdates.publish(release!!)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    failed = true
+                } finally {
+                    checking = false
+                }
+            }
+        }
+    ) {
+        if (checking) {
+            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+            Spacer(Modifier.size(8.dp))
+        }
+        Text(stringResource(if (checking) R.string.update_checking else R.string.update_check))
+    }
+    if (failed) {
+        Text(stringResource(R.string.update_failed), color = MaterialTheme.colorScheme.error)
+    } else if (release != null) {
+        Text(
+            text = if (newer) {
+                stringResource(R.string.update_available, release!!.version)
+            } else {
+                stringResource(R.string.update_current, BuildConfig.VERSION_NAME)
+            },
+            style = MaterialTheme.typography.bodySmall
+        )
+    }
+    TextButton(onClick = {
+        val page = if (newer) release!!.page else GithubUpdates.RELEASES_PAGE
+        try {
+            context.startActivity(Intent(Intent.ACTION_VIEW, android.net.Uri.parse(page)))
+        } catch (_: android.content.ActivityNotFoundException) {
+            Toast.makeText(context, R.string.update_failed, Toast.LENGTH_LONG).show()
+        }
+    }) {
+        Text(stringResource(R.string.update_get))
+    }
+}
+
+/** A titled card; every settings group sits in one. */
+@Composable
+private fun Section(
+    title: String,
+    subtitle: String?,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        shape = RoundedCornerShape(22.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.55f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Medium
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            content()
+        }
+    }
+}
+
+@Composable
+private fun SwitchRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(text = title, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
+    }
 }
 
 /** The log's size, in the units a file size reads in. */
@@ -527,19 +715,28 @@ private fun copyLog(context: Context) {
 
 /** One row of a settings picker; the check marks the active choice. */
 @Composable
-private fun ChoiceRow(label: String, selected: Boolean, onClick: () -> Unit) {
+private fun ChoiceRow(
+    label: String,
+    selected: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
     val accent = MaterialTheme.colorScheme.primary
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(enabled = enabled, onClick = onClick)
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyLarge,
-            color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
+            color = when {
+                !enabled -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                selected -> accent
+                else -> MaterialTheme.colorScheme.onSurface
+            },
             modifier = Modifier.weight(1f)
         )
         if (selected) {
@@ -613,13 +810,14 @@ private fun AccountRow(
 /** A selectable mode card; the border and wash carry the selection. */
 @Composable
 private fun ModeOption(
-    title: Int,
-    subtitle: Int,
+    title: String,
+    subtitle: String,
     selected: Boolean,
+    enabled: Boolean,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val accent = MaterialTheme.colorScheme.primary
+    val accent = MaterialTheme.colorScheme.secondary
     Surface(
         shape = RoundedCornerShape(16.dp),
         color = if (selected) accent.copy(alpha = 0.14f) else MaterialTheme.colorScheme.surface,
@@ -628,20 +826,20 @@ private fun ModeOption(
             if (selected) accent.copy(alpha = 0.55f)
             else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
         ),
-        modifier = modifier.clickable(onClick = onClick)
+        modifier = modifier.clickable(enabled = enabled, onClick = onClick)
     ) {
         Column(
             modifier = Modifier.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = stringResource(title),
+                text = title,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
                 color = if (selected) accent else MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = stringResource(subtitle),
+                text = subtitle,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

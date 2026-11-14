@@ -59,7 +59,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ffvpn.client.ui.FirefoxVpnTheme
+import com.ffvpn.client.ui.NiloofarTheme
 import com.ffvpn.client.vpn.FxaLogin
 import com.ffvpn.client.vpn.LoginPrompt
 import com.ffvpn.client.vpn.Store
@@ -79,10 +79,15 @@ class SignInActivity : ComponentActivity() {
         super.attachBaseContext(AppLocale.wrap(newBase))
     }
 
+    override fun onResume() {
+        super.onResume()
+        AppLocale.sync(this)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            FirefoxVpnTheme {
+            NiloofarTheme {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
                     SignInScreen()
                 }

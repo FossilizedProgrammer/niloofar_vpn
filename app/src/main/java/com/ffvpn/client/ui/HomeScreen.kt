@@ -1,5 +1,10 @@
 package com.ffvpn.client.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import android.os.SystemClock
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -10,13 +15,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,24 +33,32 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Download
 import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Tune
+import androidx.compose.material.icons.rounded.Widgets
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +71,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -63,95 +80,143 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ffvpn.client.BuildConfig
 import com.ffvpn.client.R
-import com.ffvpn.client.vpn.Mode
-import com.ffvpn.client.vpn.Phase
-import com.ffvpn.client.vpn.VpnUi
+import com.ffvpn.client.Texts
+import com.ffvpn.client.core.AppState
+import com.ffvpn.client.core.CoreRegistry
+import com.ffvpn.client.core.GithubUpdates
+import com.ffvpn.client.core.Prefs
+import com.ffvpn.client.core.StatusText
+import com.ffvpn.client.vpn.Store
+import kotlinx.coroutines.delay
+
+private enum class Phase { Off, Connecting, Disconnecting, On, Error }
 
 @Composable
 fun HomeScreen(
-    ui: VpnUi,
+    state: AppState.State,
     onToggle: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onOpenTools: () -> Unit
 ) {
-    val accent = when (ui.phase) {
-        Phase.Off -> Color(0xFF8A90A2)
-        Phase.Connecting -> MaterialTheme.colorScheme.secondary
+    val context = LocalContext.current
+    val phase = phaseOf(state)
+    val accent = when (phase) {
+        Phase.Off -> Lotus.idle
+        Phase.Connecting, Phase.Disconnecting -> MaterialTheme.colorScheme.secondary
         Phase.On -> MaterialTheme.colorScheme.primary
         Phase.Error -> MaterialTheme.colorScheme.error
     }
     val glow by animateColorAsState(accent, label = "glow")
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(Color(0xFF0C0E16), Color(0xFF0A0B10), Color(0xFF100A16))
-                )
-            )
-    ) {
-        // Soft halo behind the orb, so the screen has depth without an image.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize().background(Lotus.background)) {
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth(0.95f)
                 .aspectRatio(1f)
                 .background(
-                    Brush.radialGradient(
-                        listOf(glow.copy(alpha = 0.16f), Color.Transparent)
-                    ),
+                    Brush.radialGradient(listOf(glow.copy(alpha = 0.15f), Color.Transparent)),
                     CircleShape
                 )
         )
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.systemBars)
-                .padding(horizontal = 22.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = maxHeight)
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            TopBar(onOpenSettings)
-            Spacer(Modifier.weight(1f))
-            Orb(phase = ui.phase, accent = accent, onClick = onToggle)
-            Spacer(Modifier.height(26.dp))
-            StatusBlock(ui = ui, accent = accent)
-            Spacer(Modifier.weight(1f))
-            StatsCard(ui)
+            TopBar(onOpenTools, onOpenSettings)
             Spacer(Modifier.height(14.dp))
-            if (!ui.signedIn) {
+            CorePicker(state, enabled = !state.running && !state.busy && !state.disconnecting)
+            Spacer(Modifier.height(20.dp))
+            Orb(phase = phase, accent = accent, onClick = onToggle)
+            Spacer(Modifier.height(20.dp))
+            StatusBlock(state, phase, accent)
+            if (state.coreId == "firefox" && !Store.hasSession(context)) {
+                Spacer(Modifier.height(10.dp))
                 AccountChip(onClick = onOpenSettings)
             }
             Text(
                 text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.55f),
-                modifier = Modifier.padding(top = 10.dp, bottom = 8.dp)
+                modifier = Modifier.padding(top = 12.dp, bottom = 6.dp)
+            )
+            state.update?.let { release -> UpdateBadge(release) }
+        }
+    }
+}
+
+/** A quiet notice that a newer release exists; tapping it opens that release. */
+@Composable
+private fun UpdateBadge(release: GithubUpdates.Release) {
+    val context = LocalContext.current
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.14f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.tertiary.copy(alpha = 0.45f)),
+        modifier = Modifier
+            .padding(bottom = 8.dp)
+            .clickable {
+                try {
+                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(release.page)))
+                } catch (_: ActivityNotFoundException) {
+                    Toast.makeText(context, R.string.update_failed, Toast.LENGTH_LONG).show()
+                }
+            }
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Rounded.Download,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(Modifier.width(6.dp))
+            Text(
+                text = stringResource(R.string.update_available, release.version),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.tertiary
             )
         }
     }
 }
 
+private fun phaseOf(state: AppState.State): Phase = when {
+    state.disconnecting -> Phase.Disconnecting
+    state.connected -> Phase.On
+    state.busy || state.running -> Phase.Connecting
+    state.statusCode >= 2000 && state.statusCode != StatusText.STOPPED -> Phase.Error
+    else -> Phase.Off
+}
+
 @Composable
-private fun TopBar(onOpenSettings: () -> Unit) {
+private fun TopBar(onOpenTools: () -> Unit, onOpenSettings: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 12.dp),
+        modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         BrandMark()
         Spacer(Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = stringResource(R.string.free_tier),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Text(
+            text = Texts.appName,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(1f)
+        )
+        IconButton(onClick = onOpenTools) {
+            Icon(
+                imageVector = Icons.Rounded.Widgets,
+                contentDescription = Texts.tools,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
         IconButton(onClick = onOpenSettings) {
@@ -169,9 +234,7 @@ private fun BrandMark() {
     // Same artwork as the launcher icon: the rosette is cropped out of the
     // adaptive-icon foreground, whose sandstone plate fills 62% of its canvas.
     Box(
-        modifier = Modifier
-            .size(38.dp)
-            .clip(RoundedCornerShape(11.dp)),
+        modifier = Modifier.size(38.dp).clip(RoundedCornerShape(11.dp)),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -183,16 +246,72 @@ private fun BrandMark() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun CorePicker(state: AppState.State, enabled: Boolean) {
+    val cores = CoreRegistry.all()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        cores.forEach { core ->
+            val selected = core.id == state.coreId
+            Surface(
+                shape = RoundedCornerShape(50),
+                color = if (selected) {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                } else {
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.55f)
+                },
+                border = BorderStroke(
+                    1.dp,
+                    if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.55f)
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.45f)
+                ),
+                modifier = Modifier.clickable(enabled = enabled) {
+                    Prefs.coreId = core.id
+                    AppState.update { it.copy(coreId = core.id) }
+                }
+            ) {
+                Text(
+                    text = Texts.coreName(core.id),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = if (selected) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    },
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
     val transition = rememberInfiniteTransition(label = "orb")
+    val ringMillis = if (phase == Phase.Connecting || phase == Phase.Disconnecting) 2_600 else 11_000
     val spin by transition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            tween(if (phase == Phase.Connecting) 2_600 else 11_000, easing = LinearEasing)
+            tween(ringMillis, easing = LinearEasing)
         ),
         label = "spin"
+    )
+    // The inner arc counter-rotates 1.6x faster on its own 0..360 cycle. Scaling
+    // the outer angle by a fraction instead leaves a gap where the cycle wraps,
+    // which reads as a jump once per revolution.
+    val counterSpin by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            tween((ringMillis / 1.6f).toInt(), easing = LinearEasing)
+        ),
+        label = "counterSpin"
     )
     val pulse by transition.animateFloat(
         initialValue = 0.96f,
@@ -209,7 +328,7 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .size(286.dp)
+            .size(276.dp)
             .graphicsLayer {
                 val press = if (pressed) 0.965f else 1f
                 val breath = if (phase == Phase.On) pulse else 1f
@@ -217,6 +336,7 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
                 scaleY = press * breath
             }
             .clickable(
+                enabled = phase != Phase.Disconnecting,
                 interactionSource = interaction,
                 indication = null,
                 onClick = onClick
@@ -228,8 +348,6 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
             val center = Offset(size.width / 2f, size.height / 2f)
             val alpha = if (idle) 0.5f else 0.95f
 
-            // Two counter-rotating arcs: only while the tunnel is not up. Once
-            // connected they are gone and the disc alone shows the live state.
             if (phase != Phase.On) {
                 rotate(spin) {
                     drawArc(
@@ -242,7 +360,7 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
                         style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                     )
                 }
-                rotate(-spin * 1.6f) {
+                rotate(-counterSpin) {
                     drawArc(
                         color = accent.copy(alpha = alpha * 0.55f),
                         startAngle = 40f,
@@ -255,10 +373,13 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
                 }
             }
 
-            // Inner disc with a faint accent wash at the top.
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(accent.copy(alpha = 0.22f), Color(0xFF14161F), Color(0xFF0D0F16)),
+                    colors = listOf(
+                        accent.copy(alpha = 0.24f),
+                        Color(0xFF121A24),
+                        Color(0xFF0A0E15)
+                    ),
                     center = Offset(center.x, center.y - radius * 0.35f),
                     radius = radius * 1.05f
                 ),
@@ -266,7 +387,7 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
                 center = center
             )
             drawCircle(
-                color = accent.copy(alpha = 0.30f),
+                color = accent.copy(alpha = 0.32f),
                 radius = radius * 0.72f,
                 center = center,
                 style = Stroke(width = 1.dp.toPx())
@@ -276,38 +397,54 @@ private fun Orb(phase: Phase, accent: Color, onClick: () -> Unit) {
             imageVector = Icons.Rounded.PowerSettingsNew,
             contentDescription = stringResource(R.string.cd_power),
             tint = accent,
-            modifier = Modifier.size(58.dp)
+            modifier = Modifier.size(56.dp)
         )
     }
 }
 
 @Composable
-private fun StatusBlock(ui: VpnUi, accent: Color) {
+private fun StatusBlock(state: AppState.State, phase: Phase, accent: Color) {
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(state.connectedAt) {
+        while (state.connectedAt > 0L) {
+            now = SystemClock.elapsedRealtime()
+            delay(1_000)
+        }
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = stringResource(
-                when {
-                    ui.phase == Phase.Off -> R.string.status_off
-                    ui.phase == Phase.Connecting -> R.string.status_connecting
-                    ui.phase == Phase.On && ui.mode == Mode.Proxy -> R.string.status_proxy_on
-                    ui.phase == Phase.On -> R.string.status_on
-                    else -> R.string.status_error
-                }
-            ),
+            text = when (phase) {
+                Phase.Off -> Texts.ready
+                Phase.Connecting -> Texts.connecting
+                Phase.Disconnecting -> Texts.disconnecting
+                Phase.On -> Texts.connected
+                Phase.Error -> Texts.failed
+            },
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.SemiBold,
             color = accent
         )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = Texts.coreName(state.coreId).uppercase(),
+            style = MaterialTheme.typography.labelSmall,
+            fontSize = 10.sp,
+            letterSpacing = 1.6.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+        )
         Spacer(Modifier.height(8.dp))
         val detail = when {
-            ui.phase == Phase.Error && ui.detail.isNotBlank() -> ui.detail
-            ui.phase == Phase.Connecting && ui.step.isNotBlank() -> ui.step
-            ui.phase == Phase.On && ui.share && ui.address.isNotBlank() ->
-                stringResource(R.string.share_ready, ui.address) + " · " +
-                    stringResource(R.string.share_ports, "1080", "1081")
-            ui.phase == Phase.On && ui.mode == Mode.Proxy -> stringResource(R.string.hint_proxy_on)
-            ui.phase == Phase.On -> stringResource(R.string.hint_on)
-            else -> stringResource(R.string.hint_off)
+            phase == Phase.Disconnecting -> Texts.disconnectingHint
+            phase == Phase.Error ->
+                StatusText.describe(state.statusCode, state.statusDetail) +
+                    if (state.diagnosis.isNotBlank()) " · ${state.diagnosis}" else ""
+            phase == Phase.Connecting -> Texts.progress(state.coreId, state.statusDetail)
+            phase == Phase.On && state.shareLan && state.lan.isNotBlank() ->
+                Texts.lanDetail(state.lan, state.lanHttp)
+            phase == Phase.On && state.mode == AppState.Mode.PROXY ->
+                Texts.proxyDetail(Prefs.socksAddress, Prefs.httpAddress)
+            phase == Phase.On -> Texts.coreActiveDetail(Texts.coreName(state.coreId))
+            else -> Texts.detailIdle
         }
         Text(
             text = detail,
@@ -316,78 +453,41 @@ private fun StatusBlock(ui: VpnUi, accent: Color) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 18.dp)
         )
-    }
-}
-
-@Composable
-private fun StatsCard(ui: VpnUi) {
-    Surface(
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.72f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.55f)),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(vertical = 18.dp, horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Stat(
-                label = stringResource(R.string.exit_label),
-                value = ui.country.ifBlank { stringResource(R.string.exit_unknown) },
-                modifier = Modifier.weight(1.15f)
-            )
-            Divider()
-            Stat(
-                label = stringResource(R.string.latency_label),
-                value = if (ui.phase == Phase.On && ui.latencyMs > 0) {
-                    stringResource(R.string.latency_format, ui.latencyMs)
-                } else {
-                    "—"
-                },
-                modifier = Modifier.weight(0.85f)
-            )
-            Divider()
-            Stat(
-                label = stringResource(R.string.quota_label),
-                value = ui.quota.ifBlank { "—" },
-                modifier = Modifier.weight(1.1f)
-            )
+        if (phase == Phase.On) {
+            val endpoint = listOf(state.exitIp, state.exitPlace)
+                .filter { it.isNotBlank() }
+                .joinToString(" · ")
+            if (endpoint.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = endpoint,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+            val session = buildList {
+                if (state.connectMillis > 0L) {
+                    add(Texts.connectTook(Texts.duration(state.connectMillis)))
+                }
+                if (state.connectedAt > 0L) {
+                    add(
+                        Texts.sessionUptime(
+                            Texts.duration((now - state.connectedAt).coerceAtLeast(0L))
+                        )
+                    )
+                }
+            }
+            if (session.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = session.joinToString(" · "),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                )
+            }
         }
     }
-}
-
-@Composable
-private fun Stat(label: String, value: String, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.padding(horizontal = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Text(
-            text = label.uppercase(),
-            style = MaterialTheme.typography.labelSmall,
-            fontSize = 9.sp,
-            letterSpacing = 0.8.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-            maxLines = 1
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium,
-            maxLines = 1
-        )
-    }
-}
-
-@Composable
-private fun Divider() {
-    Box(
-        modifier = Modifier
-            .width(1.dp)
-            .height(26.dp)
-            .background(MaterialTheme.colorScheme.outline.copy(alpha = 0.6f))
-    )
 }
 
 @Composable
