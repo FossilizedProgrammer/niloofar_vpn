@@ -8,7 +8,7 @@ OUT="dist"
 APK_DIR="app/build/outputs/apk/release"
 ABIS=(armeabi-v7a arm64-v8a)
 LIBRARIES=(
-    libaether.so libc2tun.so libffvpn.so liblantern.so liblyrebird.so
+    libaether.so libc2tun.so libffvpn.so liblantern.so liblyrebird.so libopenrung.so
     libsstp.so libsunlion.so libsunlionbridge.so libtor.so libtorrunner.so
 )
 ASSETS=(

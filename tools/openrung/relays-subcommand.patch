@@ -1,0 +1,84 @@
+diff --git a/cmd/client/headless.go b/cmd/client/headless.go
+index afa56a5..378fd31 100644
+--- a/cmd/client/headless.go
++++ b/cmd/client/headless.go
+@@ -2,6 +2,7 @@ package main
+ 
+ import (
+ 	"context"
++	"encoding/json"
+ 	"errors"
+ 	"flag"
+ 	"fmt"
+@@ -28,6 +29,9 @@ import (
+ const (
+ 	defaultRelayLimit  = 5
+ 	defaultRelayFamily = string(client.RelayFamilyAuto)
++	// relaysJSONMarker prefixes the relays subcommand's single stdout line so a
++	// host can pick the JSON payload out of any incidental log output.
++	relaysJSONMarker = "OPENRUNG_RELAYS_JSON"
+ )
+ 
+ type commonConfig struct {
+@@ -81,6 +85,30 @@ func runCheck(args []string) error {
+ 	return nil
+ }
+ 
++// runRelays dumps the broker's usable relay directory in the engine's own
++// ranked order (the same TCP-latency ranking the connect ladder walks) as one
++// JSON line, so a host UI can present a user-selectable server list with
++// per-relay probe latency. Each element is a connectcore.DirectoryRelay:
++// {"Relay": <brokerapi.RelayDescriptor>, "ProbeMS": <int64|null>}. Logs and
++// diagnostics go to stderr; stdout carries only the marker line.
++func runRelays(args []string) error {
++	cfg, err := parseCommonFlags("relays", args)
++	if err != nil {
++		return err
++	}
++	host := newEngineHost(newConsoleSink(os.Stderr), "", false)
++	ranked, err := host.engine.RankedDirectory(context.Background(), cfg.BrokerURL)
++	if err != nil {
++		return err
++	}
++	payload, err := json.Marshal(ranked)
++	if err != nil {
++		return err
++	}
++	fmt.Fprintf(os.Stdout, "%s %s\n", relaysJSONMarker, payload)
++	return nil
++}
++
+ func runConfig(args []string) error {
+ 	fs := flag.NewFlagSet("config", flag.ContinueOnError)
+ 	cfg := commonConfig{}
+diff --git a/cmd/client/main.go b/cmd/client/main.go
+index 13211ac..2426ec2 100644
+--- a/cmd/client/main.go
++++ b/cmd/client/main.go
+@@ -42,6 +42,8 @@ func run(args []string) error {
+ 	switch args[0] {
+ 	case "check":
+ 		return runCheck(args[1:])
++	case "relays":
++		return runRelays(args[1:])
+ 	case "config":
+ 		return runConfig(args[1:])
+ 	case "connect":
+@@ -161,7 +163,7 @@ func legacyFlagWarnings(cfg connectConfig) []string {
+ 
+ func usageError() error {
+ 	printUsage()
+-	return fmt.Errorf("expected one of: check, config, connect, run")
++	return fmt.Errorf("expected one of: check, relays, config, connect, run")
+ }
+ 
+ func printUsage() {
+@@ -179,6 +181,8 @@ Commands:
+            over the shared connection engine. With -headless, connect and
+            stream logs until interrupted.
+   check    Fetch relay candidates and print the selected usable relay.
++  relays   Print the usable relay directory in ranked order as one JSON line
++           (marker OPENRUNG_RELAYS_JSON), each with its TCP probe latency.
+   config   Generate a sing-box TUN client config for the selected relay.
+   run      Internal: run the bundled sing-box with -c <config>. The connect
+            engine invokes it on this binary; it also works standalone in

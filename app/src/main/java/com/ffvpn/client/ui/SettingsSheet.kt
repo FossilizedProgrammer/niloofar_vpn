@@ -98,6 +98,8 @@ fun SettingsSheet(
     var socksPort by remember { mutableStateOf(Prefs.socksPort.toString()) }
     var httpPort by remember { mutableStateOf(Prefs.httpPort.toString()) }
     var portsError by remember { mutableStateOf<String?>(null) }
+    var excludedApps by remember { mutableStateOf(Prefs.vpnExcludedApps) }
+    var splitTunnelOpen by remember { mutableStateOf(false) }
     var torStatus by remember { mutableStateOf("") }
     var torRunning by remember { mutableStateOf(false) }
     var customBridges by remember {
@@ -261,6 +263,22 @@ fun SettingsSheet(
                         AppState.update { it.copy(mode = AppState.Mode.PROXY) }
                     }
                 }
+            }
+
+            Section(Texts.splitTunnel, Texts.splitTunnelHint) {
+                Text(
+                    text = Texts.splitTunnelCount(excludedApps.size),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedButton(
+                    onClick = { splitTunnelOpen = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(Texts.splitTunnelChoose) }
+                Text(
+                    text = stringResource(R.string.settings_next_connect),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             Section(Texts.ports, Texts.portsHint) {
@@ -581,6 +599,17 @@ fun SettingsSheet(
             }
             }
         }
+    }
+    if (splitTunnelOpen) {
+        SplitTunnelPicker(
+            initialSelection = excludedApps,
+            onDismiss = { splitTunnelOpen = false },
+            onSave = { selected ->
+                Prefs.vpnExcludedApps = selected
+                excludedApps = selected
+                splitTunnelOpen = false
+            }
+        )
     }
 }
 

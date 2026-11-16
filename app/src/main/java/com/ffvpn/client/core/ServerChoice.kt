@@ -23,7 +23,7 @@ data class ServerOption(
  * is kept per core in [Prefs]; an empty key means Auto — scan, rank, dial.
  */
 object ServerChoice {
-    private val SELECTABLE = setOf("firefox", "lantern", "sstp")
+    private val SELECTABLE = setOf("firefox", "lantern", "sstp", "openrung")
 
     // The last test per core, kept beyond the picker's own lifetime so reopening
     // it shows the same order, speeds and reachable set instead of the raw list.
@@ -46,6 +46,7 @@ object ServerChoice {
         val list = when (coreId) {
             "firefox" -> ServerList.readCache(Store.cacheFile(context)).map { firefoxOption(it) }
             "lantern" -> LanternServers.readCache(LanternServers.workDir(context)).map { lanternOption(it) }
+            "openrung" -> OpenRungServers.readCache(OpenRungServers.workDir(context)).map { openRungOption(it) }
             "sstp" -> sstpOptions(context)
             else -> emptyList()
         }
@@ -66,6 +67,9 @@ object ServerChoice {
             "firefox" -> ServerList.fetch(Store.binary(context), Store.cacheFile(context), stop)
             "lantern" -> LanternServers.fetch(
                 LanternServers.binary(context), LanternServers.workDir(context), stop, log
+            )
+            "openrung" -> OpenRungServers.fetch(
+                OpenRungServers.binary(context), OpenRungServers.workDir(context), stop, log
             )
         }
         return options(context, coreId)
@@ -93,6 +97,11 @@ object ServerChoice {
             )
                 .filter { it.latencyMs >= 0 }
                 .map { lanternOption(it.server, it.latencyMs) }
+            "openrung" -> OpenRungServers.probe(
+                OpenRungServers.readCache(OpenRungServers.workDir(context)), stop, log
+            )
+                .filter { it.latencyMs >= 0 }
+                .map { openRungOption(it.relay, it.latencyMs) }
             "sstp" -> {
                 val countries = VpnGate.loadCache(context).associateBy({ it.key }, { it.country })
                 SstpScanner.scan(SstpScanner.loadEndpoints(context), stop, log)
@@ -126,6 +135,14 @@ object ServerChoice {
             ?: RadianceServer(key, "", "", "", null)
     }
 
+    /** The relay the user pinned for OpenRung; null means Auto. */
+    fun pinnedOpenRung(context: Context): OpenRungRelay? {
+        val key = Prefs.server("openrung")
+        if (key.isBlank()) return null
+        return OpenRungServers.readCache(OpenRungServers.workDir(context)).firstOrNull { it.id == key }
+            ?: OpenRungRelay(key, Prefs.serverLabel("openrung"), "", "", "", "", null)
+    }
+
     /** The relay the user pinned for SSTP; null means Auto. */
     fun pinnedSstp(): SstpEndpoint? {
         val key = Prefs.server("sstp")
@@ -154,6 +171,20 @@ object ServerChoice {
     private fun lanternLabel(server: RadianceServer): String {
         val country = server.country.ifBlank { server.tag }
         return if (server.protocol.isBlank()) country else "$country · ${server.protocol}"
+    }
+
+    private fun openRungOption(relay: OpenRungRelay, latencyMs: Int = -1) = ServerOption(
+        relay.id,
+        openRungLabel(relay),
+        "${relay.protocol} · ${relay.label}",
+        relay.reachable,
+        latencyMs
+    )
+
+    private fun openRungLabel(relay: OpenRungRelay): String {
+        val country = relay.country.ifBlank { relay.label.ifBlank { relay.id } }
+        val place = relay.city.ifBlank { relay.label }
+        return if (place.isBlank()) country else "$country · $place"
     }
 
     private fun sstpOptions(context: Context): List<ServerOption> {

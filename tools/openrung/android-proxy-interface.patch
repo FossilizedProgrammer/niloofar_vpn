@@ -1,0 +1,14 @@
+diff --git a/connectcore/client/singbox_config.go b/connectcore/client/singbox_config.go
+index 6c6a097..29572a6 100644
+--- a/connectcore/client/singbox_config.go
++++ b/connectcore/client/singbox_config.go
+@@ -730,7 +730,8 @@ func buildRouteConfig(input SingBoxConfigInput, probeSuffixes []string) map[stri
+ 	})
+ 
+ 	route := map[string]any{
+-		"auto_detect_interface":   true,
++		// Proxy mode has no TUN to bypass; SO_BINDTODEVICE is EPERM under an Android app UID.
++		"auto_detect_interface":   input.Mode == ModeTUN,
+ 		"default_domain_resolver": "dns-0",
+ 		"rules":                   rules,
+ 		"final":                   "proxy",

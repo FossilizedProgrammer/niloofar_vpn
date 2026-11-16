@@ -11,6 +11,7 @@ import com.ffvpn.client.core.GithubUpdates
 import com.ffvpn.client.core.LanternCore
 import com.ffvpn.client.core.LogRetention
 import com.ffvpn.client.core.NetworkMonitor
+import com.ffvpn.client.core.OpenRungCore
 import com.ffvpn.client.core.Prefs
 import com.ffvpn.client.core.PsiphonCore
 import com.ffvpn.client.core.SstpCore
@@ -36,6 +37,7 @@ class App : Application() {
         CoreRegistry.register(SunAndLionCore())
         CoreRegistry.register(SstpCore())
         CoreRegistry.register(LanternCore())
+        CoreRegistry.register(OpenRungCore())
         CoreRegistry.register(TorCore())
         CoreRegistry.all().forEach { core ->
             runCatching { core.init(this) }

@@ -57,7 +57,7 @@ object Texts {
         get() = p("Mode", "حالت اتصال", "Режим", "Modo")
 
     fun modeLabel(mode: AppState.Mode): String = when (mode) {
-        AppState.Mode.VPN -> p("VPN · whole device", "وی‌پی‌ان (کل دستگاه)", "VPN · всё устройство", "VPN · todo el dispositivo")
+        AppState.Mode.VPN -> p("VPN · device apps", "وی‌پی‌ان (برنامه‌های دستگاه)", "VPN · приложения устройства", "VPN · aplicaciones del dispositivo", "VPN · 设备应用")
         AppState.Mode.PROXY -> p("Proxy · SOCKS5 + HTTP", "پروکسی (ساکس و اچ‌تی‌تی‌پی)", "Прокси · SOCKS5 + HTTP", "Proxy · SOCKS5 + HTTP")
     }
 
@@ -68,12 +68,53 @@ object Texts {
 
     val modeHint: String
         get() = p(
-            "In VPN mode every app goes through the tunnel. In proxy mode only apps configured to use the local SOCKS5 proxy do.",
-            "در حالت وی‌پی‌ان همه ترافیک دستگاه از تونل عبور می‌کند. " +
-                "در حالت پروکسی فقط برنامه‌هایی که پروکسی SOCKS5 را تنظیم کرده‌اند.",
-            "В режиме VPN весь трафик устройства идёт через туннель. В режиме прокси — только те приложения, где настроен локальный SOCKS5.",
-            "En el modo VPN todo el tráfico de las aplicaciones pasa por el túnel. En el modo proxy solo lo hacen las aplicaciones configuradas para usar el proxy SOCKS5 local."
+            "In VPN mode apps use the tunnel except those excluded in split tunneling. In proxy mode only apps configured to use the local SOCKS5 proxy do.",
+            "در حالت وی‌پی‌ان برنامه‌ها، به‌جز موارد مستثنی‌شده در تفکیک ترافیک، از تونل عبور می‌کنند. در حالت پروکسی فقط برنامه‌هایی که پروکسی SOCKS5 را تنظیم کرده‌اند.",
+            "В режиме VPN приложения используют туннель, кроме исключённых в раздельном туннелировании. В режиме прокси — только приложения с настроенным локальным SOCKS5.",
+            "En modo VPN las aplicaciones usan el túnel salvo las excluidas en el túnel dividido. En modo proxy solo lo hacen las aplicaciones configuradas para usar SOCKS5 local.",
+            "VPN 模式下，除分流排除的应用外，其他应用使用隧道。代理模式下，只有配置了本地 SOCKS5 代理的应用使用代理。"
         )
+
+    val splitTunnel: String
+        get() = p("Split tunneling", "تفکیک ترافیک", "Раздельное туннелирование", "Túnel dividido", "应用分流")
+    val splitTunnelHint: String
+        get() = p(
+            "Selected apps use the direct connection, outside the VPN. Applies to every core in VPN mode only.",
+            "برنامه‌های انتخاب‌شده خارج از وی‌پی‌ان، از اتصال مستقیم استفاده می‌کنند. برای همهٔ هسته‌ها و فقط در حالت وی‌پی‌ان اعمال می‌شود.",
+            "Выбранные приложения используют прямое подключение вне VPN. Применяется ко всем ядрам только в режиме VPN.",
+            "Las aplicaciones seleccionadas usan la conexión directa, fuera de la VPN. Se aplica a todos los núcleos solo en modo VPN.",
+            "选中的应用直接联网，不经过 VPN。适用于所有内核，仅在 VPN 模式下生效。"
+        )
+    val splitTunnelChoose: String
+        get() = p("Choose excluded apps", "انتخاب برنامه‌های خارج از وی‌پی‌ان", "Выбрать исключённые приложения", "Elegir aplicaciones excluidas", "选择排除的应用")
+    val splitTunnelSearch: String
+        get() = p("Search name or package", "جست‌وجوی نام برنامه یا بسته", "Поиск по имени или пакету", "Buscar nombre o paquete", "搜索名称或包名")
+    val splitTunnelEmpty: String
+        get() = p("No matching apps", "برنامه‌ای یافت نشد", "Приложения не найдены", "No hay aplicaciones coincidentes", "没有匹配的应用")
+    val splitTunnelClear: String
+        get() = p("Clear selection", "پاک‌کردن انتخاب‌ها", "Сбросить выбор", "Borrar selección", "清除选择")
+    val splitTunnelSave: String
+        get() = p("Save", "ذخیره", "Сохранить", "Guardar", "保存")
+    val splitTunnelUidHint: String
+        get() = p(
+            "Android also excludes apps that share a user ID with a selected app. With “Block connections without VPN” enabled, excluded apps may have no internet access.",
+            "اندروید برنامه‌هایی با شناسهٔ کاربری مشترک با برنامهٔ انتخاب‌شده را نیز مستثنی می‌کند. اگر «مسدودکردن اتصال بدون وی‌پی‌ان» روشن باشد، برنامه‌های مستثنی‌شده ممکن است به اینترنت دسترسی نداشته باشند.",
+            "Android также исключает приложения с общим UID. Если включена блокировка подключений без VPN, исключённые приложения могут остаться без интернета.",
+            "Android también excluye aplicaciones que comparten un UID. Si se bloquean las conexiones sin VPN, las aplicaciones excluidas pueden quedarse sin internet.",
+            "Android 也会排除与所选应用共用 UID 的应用。开启“阻止不使用 VPN 的连接”后，排除的应用可能无法联网。"
+        )
+
+    fun splitTunnelCount(count: Int): String = if (count == 0) {
+        p("No apps excluded", "هیچ برنامه‌ای مستثنی نشده است", "Нет исключённых приложений", "Ninguna aplicación excluida", "没有排除的应用")
+    } else {
+        p(
+            "$count app(s) excluded from VPN",
+            "$count برنامه خارج از وی‌پی‌ان",
+            "Приложений вне VPN: $count",
+            "$count " + es(count, "aplicación excluida de la VPN", "aplicaciones excluidas de la VPN"),
+            "$count 个应用不经过 VPN"
+        )
+    }
 
     val core: String
         get() = p("Core", "هسته", "Ядро", "Núcleo")
@@ -93,6 +134,7 @@ object Texts {
         "sunlion" -> p("Sun and Lion", "شیر و خورشید", "Солнце и Лев", "Sol y León")
         "sstp" -> p("SSTP", "اس‌اس‌تی‌پی", "SSTP", "SSTP")
         "lantern" -> p("Lantern", "لنترن", "Лантерн", "Lantern")
+        "openrung" -> p("OpenRung", "اوپن‌رانگ", "OpenRung", "OpenRung", "OpenRung")
         "firefox" -> p("Firefox", "فایرفاکس", "Файрфокс", "Firefox")
         "tor" -> p("Tor", "تور", "Тор", "Tor")
         else -> id
@@ -1059,6 +1101,14 @@ object Texts {
                     "در حال پیدا کردن سرورهای قابل اتصال",
                     "Ищем серверы, к которым можно подключиться",
             "Buscando servidores a los que se pueda conectar"
+                )
+            "openrung" to "connecting" ->
+                p(
+                    "Finding relays we can connect to",
+                    "در حال پیدا کردن رله‌های قابل اتصال",
+                    "Ищем релеи, к которым можно подключиться",
+                    "Buscando relés a los que se pueda conectar",
+                    "正在寻找可连接的中继"
                 )
             "firefox" to "connecting" ->
                 p("Refreshing the free server list", "در حال تازه کردن فهرست سرورهای رایگان", "Обновляем список бесплатных серверов", "Actualizando la lista de servidores gratuitos")

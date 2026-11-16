@@ -48,7 +48,7 @@
 
     <string name="mode_title">حالت اتصال</string>
     <string name="mode_vpn">وی‌پی‌ان</string>
-    <string name="mode_vpn_desc">تمام ترافیک این دستگاه از تونل عبور کند.</string>
+    <string name="mode_vpn_desc">ترافیک برنامه‌ها، به‌جز موارد مستثنی‌شده در تفکیک ترافیک، از تونل عبور کند.</string>
     <string name="mode_proxy">پروکسی</string>
     <string name="mode_proxy_desc">یک پروکسی SOCKS/HTTP برای برنامه‌هایی که خودتان تنظیم می‌کنید.</string>
     <string name="share_title">اشتراک در شبکه</string>

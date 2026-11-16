@@ -48,7 +48,7 @@
 
     <string name="mode_title">Modo de conexión</string>
     <string name="mode_vpn">VPN</string>
-    <string name="mode_vpn_desc">Enviar todo el tráfico de este dispositivo por el túnel.</string>
+    <string name="mode_vpn_desc">Enviar el tráfico de las apps por el túnel, excepto las excluidas en túnel dividido.</string>
     <string name="mode_proxy">Proxy</string>
     <string name="mode_proxy_desc">Ejecutar un proxy SOCKS/HTTP para las apps que configures.</string>
     <string name="share_title">Compartir en la red</string>

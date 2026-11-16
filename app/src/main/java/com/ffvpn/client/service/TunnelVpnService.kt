@@ -3,6 +3,7 @@ package com.ffvpn.client.service
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.Build
 import android.os.Handler
@@ -87,6 +88,7 @@ class TunnelVpnService : VpnService() {
             Notifications.build(this, Texts.appName, Texts.notificationConnecting)
         )
         val selected = CoreRegistry.get(coreId)
+        val excludedApps = Prefs.vpnExcludedApps - packageName
         core = selected
         val gen = generation.incrementAndGet()
         stopping = false
@@ -214,6 +216,14 @@ class TunnelVpnService : VpnService() {
                 runCatching { builder.addDnsServer(dns) }
             }
             val descriptor = try {
+                excludedApps.forEach { app ->
+                    try {
+                        builder.addDisallowedApplication(app)
+                    } catch (_: PackageManager.NameNotFoundException) {
+                        AppState.log("VPN exclusion skipped: $app is no longer installed")
+                    }
+                }
+                AppState.log("VPN split tunneling: ${excludedApps.size} configured exclusion(s)")
                 builder.establish()
             } catch (t: Throwable) {
                 AppState.log("establish failed: ${t.message}")

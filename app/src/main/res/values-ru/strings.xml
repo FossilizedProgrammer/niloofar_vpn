@@ -48,7 +48,7 @@
 
     <string name="mode_title">Режим подключения</string>
     <string name="mode_vpn">VPN</string>
-    <string name="mode_vpn_desc">Весь трафик устройства идёт через туннель.</string>
+    <string name="mode_vpn_desc">Трафик приложений идёт через туннель, кроме исключённых в раздельном туннелировании.</string>
     <string name="mode_proxy">Прокси</string>
     <string name="mode_proxy_desc">SOCKS/HTTP-прокси для приложений, которые вы настроите.</string>
     <string name="share_title">Доступ в сети</string>

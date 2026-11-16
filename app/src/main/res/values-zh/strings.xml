@@ -48,7 +48,7 @@
 
     <string name="mode_title">连接模式</string>
     <string name="mode_vpn">VPN</string>
-    <string name="mode_vpn_desc">让本设备的所有流量都经过隧道。</string>
+    <string name="mode_vpn_desc">让设备应用的流量经过隧道，在应用分流中排除的应用除外。</string>
     <string name="mode_proxy">代理</string>
     <string name="mode_proxy_desc">为你配置的应用运行 SOCKS/HTTP 代理。</string>
     <string name="share_title">在网络上共享</string>

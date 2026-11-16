@@ -82,6 +82,12 @@ object Prefs {
         return tag.lowercase(Locale.ROOT).take(2)
     }
 
+    var vpnExcludedApps: Set<String>
+        get() = prefs().getStringSet("vpn_excluded_apps", emptySet()).orEmpty().toSet()
+        set(value) {
+            prefs().edit().putStringSet("vpn_excluded_apps", value.toSet()).apply()
+        }
+
     var shareLan: Boolean
         get() = prefs().getBoolean(KEY_SHARE_LAN, false)
         set(value) {

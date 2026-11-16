@@ -49,7 +49,7 @@
 
     <string name="mode_title">Connection mode</string>
     <string name="mode_vpn">VPN</string>
-    <string name="mode_vpn_desc">Route all traffic from this device through the tunnel.</string>
+    <string name="mode_vpn_desc">Route device apps through the tunnel, except apps excluded in split tunneling.</string>
     <string name="mode_proxy">Proxy</string>
     <string name="mode_proxy_desc">Run a SOCKS/HTTP proxy for apps you configure.</string>
     <string name="share_title">Share on network</string>

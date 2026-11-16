@@ -1,6 +1,6 @@
 # نیلوفر وی‌پی‌ان
 
-[English](README.md) · **فارسی** · [Русский](README.ru.md) · [Español](README.es.md)
+[English](README.md) · **فارسی** · [Русский](README.ru.md) · [Español](README.es.md) · [简体中文](README.zh.md)
 
 کلاینت اندرویدی برای موتور فایرفاکس وی‌پی‌ان در `../firefox-vpn-go`. موتور Go
 به `libffvpn.so` کراس‌کامپایل می‌شود، از `nativeLibraryDir` اجرا می‌شود و به یک

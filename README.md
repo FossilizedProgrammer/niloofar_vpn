@@ -1,6 +1,6 @@
 # نیلوفر وی‌پی‌ان (Niloofar VPN)
 
-**English** · [فارسی](README.fa.md) · [Русский](README.ru.md) · [Español](README.es.md)
+**English** · [فارسی](README.fa.md) · [Русский](README.ru.md) · [Español](README.es.md) · [简体中文](README.zh.md)
 
 An Android client for the Firefox VPN engine in `../firefox-vpn-go`. The Go
 engine is cross-compiled into `libffvpn.so`, exec'd from `nativeLibraryDir`,
