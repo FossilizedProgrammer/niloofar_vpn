@@ -120,6 +120,16 @@ object TorBridges {
     /** What [saveCustom] answered, so the card can say it in the user's language. */
     data class CustomResult(val accepted: Int, val rejected: Int)
 
+    /**
+     * Drops every stored bridge, both the scanned list and the lines the user
+     * typed, so the next scan starts from a clean slate.
+     */
+    fun clear(context: Context) {
+        runCatching { storeFile(context).delete() }
+        runCatching { customFile(context).delete() }
+        AppState.log("engine tor all stored bridges cleared")
+    }
+
     fun lastScannedAt(context: Context): Long =
         runCatching { storeFile(context).lastModified() }.getOrDefault(0L)
 

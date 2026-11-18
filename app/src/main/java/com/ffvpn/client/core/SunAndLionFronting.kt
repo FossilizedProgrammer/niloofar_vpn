@@ -59,15 +59,42 @@ class SunAndLionStore(context: Context) {
             .apply()
     }
 
-    fun recordSuccess(ip: String, sni: String) {
+    fun recordSuccess(ip: String, sni: String, host: String = "") {
         prefs.edit()
             .putString(KEY_LAST_IP, ip)
             .putString(KEY_LAST_SNI, sni)
+            .putString(KEY_LAST_HOST, host)
             .putLong(KEY_LAST_AT, System.currentTimeMillis())
             .apply()
-        if (sni.isNotBlank() && load() == null) {
-            saveScan(SunAndLionCandidates(listOf(ip), listOf(sni)))
+        if (sni.isNotBlank()) {
+            // Keep the route that just worked at the front of the scanned list:
+            // the next attempt hands it to the engine before anything else.
+            val current = load()
+            saveScan(
+                SunAndLionCandidates(
+                    ips = (listOf(ip) + (current?.ips ?: emptyList())).distinct(),
+                    snis = (listOf(sni).filter(::usableSni) + (current?.snis ?: emptyList())).distinct(),
+                    hosts = (listOf(host).filter(::usableSni) + (current?.hosts ?: emptyList())).distinct()
+                )
+            )
         }
+    }
+
+    /**
+     * Forgets the last route and the list it belonged to, so the next attempt
+     * scans again instead of retrying values that just failed.
+     */
+    fun forgetAll() {
+        prefs.edit()
+            .remove(KEY_LAST_IP)
+            .remove(KEY_LAST_SNI)
+            .remove(KEY_LAST_HOST)
+            .remove(KEY_LAST_AT)
+            .remove(KEY_IPS)
+            .remove(KEY_SNIS)
+            .remove(KEY_HOSTS)
+            .remove(KEY_SCANNED_AT)
+            .apply()
     }
 
     /** Forgets the route that worked last, so a fresh list is walked from its top. */
@@ -89,6 +116,9 @@ class SunAndLionStore(context: Context) {
         return ip to prefs.getString(KEY_LAST_SNI, "").orEmpty()
     }
 
+    /** The HTTP `Host:` that accompanied the last winning route, if it had one. */
+    fun lastHost(): String = prefs.getString(KEY_LAST_HOST, "").orEmpty()
+
     private fun readList(key: String): List<String> = runCatching {
         val raw = prefs.getString(key, null) ?: return emptyList()
         val array = JSONArray(raw)
@@ -102,6 +132,7 @@ class SunAndLionStore(context: Context) {
         const val KEY_SCANNED_AT = "scanned_at"
         const val KEY_LAST_IP = "last_ip"
         const val KEY_LAST_SNI = "last_sni"
+        const val KEY_LAST_HOST = "last_host"
         const val KEY_LAST_AT = "last_at"
     }
 }

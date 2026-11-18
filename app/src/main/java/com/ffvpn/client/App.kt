@@ -7,6 +7,7 @@ import com.ffvpn.client.core.CaBundle
 import com.ffvpn.client.core.CoreRegistry
 import com.ffvpn.client.core.CrashGuard
 import com.ffvpn.client.core.FirefoxCore
+import com.ffvpn.client.core.FluxcoreCore
 import com.ffvpn.client.core.GithubUpdates
 import com.ffvpn.client.core.LanternCore
 import com.ffvpn.client.core.LogRetention
@@ -38,6 +39,7 @@ class App : Application() {
         CoreRegistry.register(SstpCore())
         CoreRegistry.register(LanternCore())
         CoreRegistry.register(OpenRungCore())
+        CoreRegistry.register(FluxcoreCore())
         CoreRegistry.register(TorCore())
         CoreRegistry.all().forEach { core ->
             runCatching { core.init(this) }

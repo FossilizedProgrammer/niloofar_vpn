@@ -23,7 +23,7 @@ data class ServerOption(
  * is kept per core in [Prefs]; an empty key means Auto — scan, rank, dial.
  */
 object ServerChoice {
-    private val SELECTABLE = setOf("firefox", "lantern", "sstp", "openrung")
+    private val SELECTABLE = setOf("firefox", "lantern", "sstp", "openrung", "fluxcore")
 
     // The last test per core, kept beyond the picker's own lifetime so reopening
     // it shows the same order, speeds and reachable set instead of the raw list.
@@ -47,10 +47,15 @@ object ServerChoice {
             "firefox" -> ServerList.readCache(Store.cacheFile(context)).map { firefoxOption(it) }
             "lantern" -> LanternServers.readCache(LanternServers.workDir(context)).map { lanternOption(it) }
             "openrung" -> OpenRungServers.readCache(OpenRungServers.workDir(context)).map { openRungOption(it) }
+            "fluxcore" -> FluxcoreServers.readCache(FluxcoreServers.workDir(context)).map { fluxcoreOption(it) }
             "sstp" -> sstpOptions(context)
             else -> emptyList()
         }
-        return list.distinctBy { it.key }.sortedWith(compareBy({ it.label.lowercase() }, { it.key }))
+        val unique = list.distinctBy { it.key }
+        // Fluxcore's rows arrive ordered by the fleet's own load figures; that
+        // ranking is what the picker shows, so it is not re-sorted by name.
+        if (coreId == "fluxcore") return unique
+        return unique.sortedWith(compareBy({ it.label.lowercase() }, { it.key }))
     }
 
     /**
@@ -70,6 +75,9 @@ object ServerChoice {
             )
             "openrung" -> OpenRungServers.fetch(
                 OpenRungServers.binary(context), OpenRungServers.workDir(context), stop, log
+            )
+            "fluxcore" -> FluxcoreServers.fetch(
+                FluxcoreServers.binary(context), FluxcoreServers.workDir(context), stop, log
             )
         }
         return options(context, coreId)
@@ -102,6 +110,9 @@ object ServerChoice {
             )
                 .filter { it.latencyMs >= 0 }
                 .map { openRungOption(it.relay, it.latencyMs) }
+            // The engine measures every gateway while it lists them, so the
+            // refreshed list is already the tested one.
+            "fluxcore" -> options(context, coreId)
             "sstp" -> {
                 val countries = VpnGate.loadCache(context).associateBy({ it.key }, { it.country })
                 SstpScanner.scan(SstpScanner.loadEndpoints(context), stop, log)
@@ -110,8 +121,12 @@ object ServerChoice {
             }
             else -> emptyList()
         }
-        val result = list.distinctBy { it.key }
-            .sortedWith(compareBy({ it.latencyMs }, { it.label.lowercase() }, { it.key }))
+        val result = if (coreId == "fluxcore") {
+            list.distinctBy { it.key }
+        } else {
+            list.distinctBy { it.key }
+                .sortedWith(compareBy({ it.latencyMs }, { it.label.lowercase() }, { it.key }))
+        }
         testedSource[coreId] = options(context, coreId).map { it.key }
         testedCache[coreId] = result
         return result
@@ -149,6 +164,20 @@ object ServerChoice {
         if (key.isBlank()) return null
         return SstpEndpoint.parse(key)
     }
+
+    /** The selector the user pinned for Fluxcore; null means Auto. */
+    fun pinnedFluxcore(): String? = Prefs.server("fluxcore").ifBlank { null }
+
+    private fun fluxcoreOption(gateway: FluxcoreGateway) = ServerOption(
+        gateway.id,
+        if (gateway.city.isBlank()) gateway.name else "${gateway.name} · ${gateway.city}",
+        buildString {
+            append("${gateway.loadPct}% load")
+            if (gateway.nodes > 1) append(" · ${gateway.nodes} nodes")
+        },
+        reachable = true,
+        latencyMs = gateway.latencyMs
+    )
 
     private fun firefoxOption(server: Server, latencyMs: Int = -1) =
         ServerOption(server.address, server.label, server.address, latencyMs = latencyMs)

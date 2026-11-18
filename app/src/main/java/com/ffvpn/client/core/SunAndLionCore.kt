@@ -103,6 +103,9 @@ class SunAndLionCore : VpnCore {
                 "engine sunlion saved route failed (${result.describe()}), " +
                     "dialing the engine edge corpus"
             )
+            // The saved values just failed; drop them so a later session starts
+            // from a fresh scan instead of retrying the same route again.
+            store.forgetAll()
         }
         return finish(attempt(null, FULL_BUDGET_SECONDS, mine))
     }
@@ -160,7 +163,7 @@ class SunAndLionCore : VpnCore {
                     "engine $id tunnel ready in ${result.optLong("ConnectTimeMS")}ms " +
                         "socks=${result.optInt("SOCKSProxyPort", Prefs.socksPort)}"
                 )
-                recordRouteFromNotices(noticesOffset)
+                recordRouteFromNotices(noticesOffset, candidates?.hosts?.firstOrNull().orEmpty())
                 emit(1004, "ready", "")
                 Attempt.Ok
             }
@@ -283,12 +286,9 @@ class SunAndLionCore : VpnCore {
                 put("FRONTED-MEEK-CDN-HTTP-OSSH")
                 put("FRONTED-MEEK-CDN-QUIC-OSSH")
             })
-            // The engine's own edge corpus always stays in the rotation: it walks
-            // hundreds of IP/SNI pairs in Go with 30 workers and remembers what
-            // worked on this network. Measured here, that corpus reached a tunnel
-            // in 7s while the same attempt pinned to an unproven tool list burned
-            // 90s before it got a turn.
-            put("FrontedMeekCDNScanUseBuiltInSpec", true)
+            // A saved route is tried on its own first; only the unfiltered
+            // attempt falls back to the engine's built-in edge corpus.
+            put("FrontedMeekCDNScanUseBuiltInSpec", candidates == null)
             if (candidates != null) {
                 put("FrontedMeekCDNScanSpec", JSONObject().apply {
                     put("IPCandidates", JSONArray(candidates.ips))
@@ -302,9 +302,10 @@ class SunAndLionCore : VpnCore {
             // sees the mismatch fronting was meant to hide. Measured here, pinning
             // an unproven list cost 4x to 8x the time to a tunnel, so a list from
             // the scanner only enters the engine's own candidate rotation.
-            val route = store.lastRoute()
+            val route = if (candidates != null) store.lastRoute() else null
             if (route != null && route.second.isNotBlank()) {
-                val host = candidates?.hosts?.firstOrNull().orEmpty()
+                val host = candidates?.hosts?.firstOrNull()?.takeIf { it.isNotBlank() }
+                    ?: store.lastHost()
                 put("FrontedMeekDialOverridesProbability", 1.0)
                 put("FrontedMeekDialOverrides", JSONArray().apply {
                     put(JSONObject().apply {
@@ -357,7 +358,7 @@ class SunAndLionCore : VpnCore {
      * the last fronted route that actually carried a tunnel. The notice file
      * writer flushes asynchronously, so the read is retried briefly.
      */
-    private fun recordRouteFromNotices(offset: Long) {
+    private fun recordRouteFromNotices(offset: Long, host: String) {
         val file = noticesFile()
         if (!file.exists()) return
         var match: MatchResult? = null
@@ -374,8 +375,11 @@ class SunAndLionCore : VpnCore {
         // dial omitted the SNI extension, which the override spells as "".
         val sni = found.groupValues[2].replace("\\", "").let { if (it == "none") "" else it }
         if (ip.isBlank()) return
-        store.recordSuccess(ip, sni)
-        AppState.log("engine $id saved route ip=$ip sni=${sni.ifBlank { "none" }}")
+        store.recordSuccess(ip, sni, host)
+        AppState.log(
+            "engine $id saved route ip=$ip sni=${sni.ifBlank { "none" }} " +
+                "host=${host.ifBlank { "none" }}"
+        )
     }
 
     private fun readNoticesSince(file: File, offset: Long): String {

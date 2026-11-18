@@ -135,6 +135,7 @@ object Texts {
         "sstp" -> p("SSTP", "اس‌اس‌تی‌پی", "SSTP", "SSTP")
         "lantern" -> p("Lantern", "لنترن", "Лантерн", "Lantern")
         "openrung" -> p("OpenRung", "اوپن‌رانگ", "OpenRung", "OpenRung", "OpenRung")
+        "fluxcore" -> p("Fluxcore", "فلاکس‌کور", "Fluxcore", "Fluxcore", "Fluxcore")
         "firefox" -> p("Firefox", "فایرفاکس", "Файрфокс", "Firefox")
         "tor" -> p("Tor", "تور", "Тор", "Tor")
         else -> id
@@ -210,6 +211,14 @@ object Texts {
         "$count ${es(count, "servidor accesible", "servidores accesibles")}, el más rápido primero",
         "$count 个可达服务器，按速度排序"
     )
+
+    val serverTestedLoad: String
+        get() = p(
+            "gateways online, least loaded first",
+            "گیت‌وی در دسترس، کم‌بارترین اول",
+            "шлюзов в сети, наименее загруженные первыми",
+            "puertas de enlace en línea, las menos cargadas primero"
+        )
 
     val serverUnreachable: String
         get() = p("unreachable", "در دسترس نیست", "недоступен", "no disponible")
@@ -638,6 +647,24 @@ object Texts {
         )
     val saveBridges: String
         get() = p("Save these bridges", "ذخیره این بریج‌ها", "Сохранить эти мосты", "Guardar estos puentes")
+
+    val clearBridges: String
+        get() = p(
+            "Clear saved bridges",
+            "پاک کردن بریج‌های تور",
+            "Очистить сохранённые мосты",
+            "Borrar los puentes guardados",
+            "清除已保存的网桥"
+        )
+
+    val bridgesCleared: String
+        get() = p(
+            "All saved bridges were cleared.",
+            "همهٔ بریج‌های ذخیره‌شده پاک شدند.",
+            "Все сохранённые мосты удалены.",
+            "Se borraron todos los puentes guardados.",
+            "已清除所有已保存的网桥。"
+        )
 
     fun bridgesSaved(accepted: Int, rejected: Int): String =
         p(
@@ -1109,6 +1136,14 @@ object Texts {
                     "Ищем релеи, к которым можно подключиться",
                     "Buscando relés a los que se pueda conectar",
                     "正在寻找可连接的中继"
+                )
+            "fluxcore" to "connecting" ->
+                p(
+                    "Finding gateways we can connect to",
+                    "در حال پیدا کردن گیت‌وی‌های قابل اتصال",
+                    "Ищем шлюзы, к которым можно подключиться",
+                    "Buscando puertas de enlace a las que conectarse",
+                    "正在寻找可连接的网关"
                 )
             "firefox" to "connecting" ->
                 p("Refreshing the free server list", "در حال تازه کردن فهرست سرورهای رایگان", "Обновляем список бесплатных серверов", "Actualizando la lista de servidores gratuitos")

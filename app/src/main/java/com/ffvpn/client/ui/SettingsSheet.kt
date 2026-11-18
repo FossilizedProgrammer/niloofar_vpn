@@ -468,6 +468,17 @@ fun SettingsSheet(
                     },
                     enabled = customBridges.isNotBlank() || scannedBridges.isNotEmpty()
                 ) { Text(Texts.saveBridges) }
+                TextButton(
+                    onClick = {
+                        TorBridges.clear(context)
+                        customBridges = ""
+                        scannedBridges = emptyList()
+                        bridgeCount = 0
+                        torStatus = Texts.bridgesCleared
+                    },
+                    enabled = bridgeCount > 0,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text(Texts.clearBridges) }
             }
 
             Section(stringResource(R.string.account_title), stringResource(R.string.account_hint)) {

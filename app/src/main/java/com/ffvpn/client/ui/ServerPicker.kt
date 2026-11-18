@@ -121,8 +121,7 @@ private fun ServerPickerSheet(
         mutableStateOf(
             when {
                 restored == null -> ""
-                restored.isEmpty() -> Texts.serverNoneReachable
-                else -> Texts.serverTested(restored.size)
+                else -> testedStatus(coreId, restored.size)
             }
         )
     }
@@ -182,11 +181,7 @@ private fun ServerPickerSheet(
                         refreshing = false
                         tested = true
                         options = list
-                        status = if (list.isEmpty()) {
-                            Texts.serverNoneReachable
-                        } else {
-                            Texts.serverTested(list.size)
-                        }
+                        status = testedStatus(coreId, list.size)
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -276,4 +271,11 @@ private fun ServerRow(
             Text(text = "✓", color = accent, style = MaterialTheme.typography.bodyLarge)
         }
     }
+}
+
+/** Fluxcore's rows come back in the fleet's own load order, not by latency. */
+private fun testedStatus(coreId: String, count: Int): String = when {
+    count == 0 -> Texts.serverNoneReachable
+    coreId == "fluxcore" -> "$count ${Texts.serverTestedLoad}"
+    else -> Texts.serverTested(count)
 }
