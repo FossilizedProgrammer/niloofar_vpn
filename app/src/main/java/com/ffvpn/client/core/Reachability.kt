@@ -31,6 +31,20 @@ object Reachability {
         "www.facebook.com" to "facebook"
     )
 
+    /**
+     * Opera's free SurfEasy exits refuse youtube and facebook themselves (403),
+     * and stall cloudflare, so those cannot tell a working Opera tunnel from a
+     * dead one. ipify is the site its exits answer every time: the exit still
+     * resolves the name and the certificate still has to match.
+     */
+    private val OPERA_TARGETS = listOf(
+        "api.ipify.org" to "ipify"
+    )
+
+    /** The sites this core is asked for; only Opera's own exit filters any. */
+    private fun targetsFor(coreId: String?): List<Pair<String, String>> =
+        if (coreId == "opera") OPERA_TARGETS else TARGETS
+
     private const val HTTPS_PORT = 443
     private const val PER_REQUEST_MS = 6_000
     private const val HOP_CONNECT_MS = 2_000
@@ -50,7 +64,11 @@ object Reachability {
      * Blocking. [proxy] is the core's local SOCKS5 address; [cancelled] is polled
      * between requests so turning the tunnel off does not wait out the budget.
      */
-    fun verify(proxy: String, cancelled: () -> Boolean = { false }): Outcome {
+    fun verify(
+        proxy: String,
+        coreId: String? = null,
+        cancelled: () -> Boolean = { false }
+    ): Outcome {
         val port = proxy.substringAfterLast(':').toIntOrNull()
         val host = proxy.substringBeforeLast(':').trim().removeSurrounding("[", "]")
         if (port == null || port !in 1..65535 || host.isBlank()) {
@@ -58,9 +76,16 @@ object Reachability {
             // core's own watchdog be the judge rather than blocking the connect.
             return Outcome(true, "no local proxy to probe ($proxy)")
         }
+        val targets = targetsFor(coreId)
+        // VeePN's free exits need a moment after "connected" before they carry
+        // YouTube/Facebook; probing immediately makes a live tunnel look dead.
+        val initialSettle = if (coreId == "veepn") 15_000L else 0L
+        if (initialSettle > 0) {
+            if (!pauseUnlessCancelled(cancelled, initialSettle)) return Outcome(false, "cancelled")
+        }
         val deadline = SystemClock.elapsedRealtime() + BUDGET_MS
         val failed = LinkedHashSet<String>()
-        for ((name, label) in TARGETS) {
+        for ((name, label) in targets) {
             var round = 0
             var answered = false
             while (round < ROUNDS && !answered) {
@@ -82,8 +107,10 @@ object Reachability {
             return Outcome(false, "no answer from ${failed.joinToString(", ")}")
         }
         if (!pauseUnlessCancelled(cancelled, SETTLE_MS)) return Outcome(false, "cancelled")
-        val dropped = TARGETS.filter { !probe(host, port, it.first) }.map { it.second }
-        if (dropped.isEmpty()) return Outcome(true, "youtube and facebook answered")
+        val dropped = targets.filter { !probe(host, port, it.first) }.map { it.second }
+        if (dropped.isEmpty()) {
+            return Outcome(true, "${targets.joinToString(" and ") { it.second }} answered")
+        }
         return Outcome(false, "no answer from ${dropped.joinToString(", ")} once the link settled")
     }
 
@@ -163,6 +190,8 @@ object Reachability {
                 status != null && status.startsWith("HTTP/")
             }
         }
+    }.onFailure {
+        AppState.log("reachability: $host probe failed: ${it.javaClass.simpleName}: ${it.message}")
     }.getOrDefault(false)
 
     private fun pauseUnlessCancelled(cancelled: () -> Boolean, millis: Long): Boolean {

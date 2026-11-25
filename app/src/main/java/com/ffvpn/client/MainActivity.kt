@@ -25,6 +25,7 @@ import com.ffvpn.client.core.AppState
 import com.ffvpn.client.core.Prefs
 import com.ffvpn.client.service.ProxyService
 import com.ffvpn.client.service.TunnelVpnService
+import com.ffvpn.client.ui.DonateScreen
 import com.ffvpn.client.ui.HomeScreen
 import com.ffvpn.client.ui.NiloofarTheme
 import com.ffvpn.client.ui.SettingsSheet
@@ -70,6 +71,7 @@ class MainActivity : ComponentActivity() {
                 var state by remember { mutableStateOf(AppState.state) }
                 var settingsOpen by remember { mutableStateOf(false) }
                 var toolsOpen by remember { mutableStateOf(false) }
+                var donateOpen by remember { mutableStateOf(false) }
 
                 DisposableEffect(Unit) {
                     val stop = AppState.listen { state = it }
@@ -77,14 +79,17 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF06080E)) {
-                    if (toolsOpen) {
+                    if (donateOpen) {
+                        DonateScreen(onBack = { donateOpen = false })
+                    } else if (toolsOpen) {
                         ToolsScreen(onBack = { toolsOpen = false })
                     } else {
                         HomeScreen(
                             state = state,
                             onToggle = { toggle { settingsOpen = true } },
                             onOpenSettings = { settingsOpen = true },
-                            onOpenTools = { toolsOpen = true }
+                            onOpenTools = { toolsOpen = true },
+                            onOpenDonate = { donateOpen = true }
                         )
                     }
                 }

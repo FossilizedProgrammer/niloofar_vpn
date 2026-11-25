@@ -254,11 +254,9 @@ class FluxcoreCore : VpnCore {
                         lastLine = text
                         when {
                             text.equals(CONNECTED_MARKER, ignoreCase = true) -> {
+                                // dial() owns the "ready" announcement, once
+                                // its own traffic probe has passed.
                                 tunnelUp = true
-                                if (!connected) {
-                                    connected = true
-                                    emit(1004, "ready", "")
-                                }
                             }
                             // The engine reconnects a lost tunnel itself; the UI
                             // has to say so instead of staying "connected".
@@ -283,6 +281,7 @@ class FluxcoreCore : VpnCore {
         EngineProc.shutdown(child, { AppState.log("engine $id $it") }, "fluxcore")
         lastLine = ""
         tunnelUp = false
+        connected = false
     }
 
     private fun emit(code: Int, message: String, data: String) {

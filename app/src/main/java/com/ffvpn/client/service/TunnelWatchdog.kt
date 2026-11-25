@@ -16,21 +16,30 @@ object TunnelWatchdog {
     @Volatile
     private var worker: Thread? = null
 
-    /** Ask the core's SOCKS port for a real connection right now. */
+    /**
+     * Ask the core's SOCKS port for a real connection right now. [host] is what
+     * the core's own exits are known to carry; see VpnCore.probeHost.
+     */
     fun servesTraffic(
         port: Int = Prefs.socksPort,
-        timeoutMs: Int = DEFAULT_TIMEOUT_MS
-    ): Boolean = probe(port, timeoutMs)
+        timeoutMs: Int = DEFAULT_TIMEOUT_MS,
+        host: String = DEFAULT_HOST
+    ): Boolean = probe(port, timeoutMs, host)
 
     /** Probes are idempotent, so starting again simply replaces the previous run. */
-    fun start(port: Int, timeoutMs: Int, onDead: () -> Unit) {
+    fun start(
+        port: Int,
+        timeoutMs: Int,
+        host: String = DEFAULT_HOST,
+        onDead: () -> Unit
+    ) {
         stop()
         val thread = Thread {
             var strikes = 0
             var delay = FIRST_DELAY_MS
             while (!Thread.currentThread().isInterrupted) {
                 if (!sleep(delay)) return@Thread
-                if (probe(port, timeoutMs)) {
+                if (probe(port, timeoutMs, host)) {
                     if (strikes > 0) AppState.log("watchdog: traffic is flowing again")
                     strikes = 0
                     delay = INTERVAL_MS
@@ -70,7 +79,7 @@ object TunnelWatchdog {
      * The site is named rather than addressed by IP so this cannot fail merely
      * because one address is blocked at an exit that carries everything else.
      */
-    private fun probe(port: Int, timeoutMs: Int): Boolean = runCatching {
+    private fun probe(port: Int, timeoutMs: Int, host: String): Boolean = runCatching {
         Socket().use { socket ->
             socket.connect(InetSocketAddress(Prefs.LOOPBACK, port), HANDSHAKE_TIMEOUT_MS)
             socket.soTimeout = HANDSHAKE_TIMEOUT_MS
@@ -81,7 +90,7 @@ object TunnelWatchdog {
             if (!readFully(input, greeting)) return false
             if (greeting[0] != 5.toByte() || greeting[1] != 0.toByte()) return false
             socket.soTimeout = timeoutMs
-            output.write(connectRequest(HOST, PORT))
+            output.write(connectRequest(host, PORT))
             val reply = ByteArray(4)
             if (!readFully(input, reply)) return false
             if (reply[0] != 5.toByte() || reply[1] != 0.toByte()) return false
@@ -144,8 +153,8 @@ object TunnelWatchdog {
 
     private val REQUEST = byteArrayOf(5, 1, 0)
 
-    /** Same site the connect check asks for, so the two never disagree. */
-    private const val HOST = "www.youtube.com"
+    /** The default liveness site, for cores that carry YouTube. */
+    private const val DEFAULT_HOST = "www.youtube.com"
     private const val PORT = 443
 
     private const val DEFAULT_TIMEOUT_MS = 6_000

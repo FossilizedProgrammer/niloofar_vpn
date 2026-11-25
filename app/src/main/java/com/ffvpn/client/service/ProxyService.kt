@@ -200,7 +200,9 @@ class ProxyService : Service() {
             it.copy(busy = true, statusCode = 1002, statusDetail = Texts.verifyingTunnel)
         }
         workers.execute {
-            val reach = Reachability.verify(selected.proxyAddress) { stopping || stale(gen) }
+            val reach = Reachability.verify(selected.proxyAddress, coreId = selected.id) {
+                stopping || stale(gen)
+            }
             verifying.set(false)
             main.post {
                 if (stopping || stale(gen) || AppState.state.disconnecting) return@post
@@ -316,7 +318,7 @@ class ProxyService : Service() {
         if (Prefs.shareLan) {
             LanShare.start(coreProxy)
         }
-        TunnelWatchdog.start(Prefs.socksPort, selected.trafficProbeTimeoutMs) {
+        TunnelWatchdog.start(Prefs.socksPort, selected.trafficProbeTimeoutMs, selected.probeHost) {
             fail("no traffic through the tunnel", gen)
         }
     }

@@ -23,7 +23,8 @@ data class ServerOption(
  * is kept per core in [Prefs]; an empty key means Auto — scan, rank, dial.
  */
 object ServerChoice {
-    private val SELECTABLE = setOf("firefox", "lantern", "sstp", "openrung", "fluxcore")
+    private val SELECTABLE =
+        setOf("firefox", "lantern", "sstp", "openrung", "fluxcore", "veepn", "geph", "opera")
 
     // The last test per core, kept beyond the picker's own lifetime so reopening
     // it shows the same order, speeds and reachable set instead of the raw list.
@@ -48,6 +49,9 @@ object ServerChoice {
             "lantern" -> LanternServers.readCache(LanternServers.workDir(context)).map { lanternOption(it) }
             "openrung" -> OpenRungServers.readCache(OpenRungServers.workDir(context)).map { openRungOption(it) }
             "fluxcore" -> FluxcoreServers.readCache(FluxcoreServers.workDir(context)).map { fluxcoreOption(it) }
+            "veepn" -> VeepnServers.readCache(VeepnServers.workDir(context)).map { veepnOption(it) }
+            "geph" -> GephServers.readCache(GephServers.workDir(context)).map { gephOption(it) }
+            "opera" -> OperaServers.regions.map { operaOption(it) }
             "sstp" -> sstpOptions(context)
             else -> emptyList()
         }
@@ -78,6 +82,12 @@ object ServerChoice {
             )
             "fluxcore" -> FluxcoreServers.fetch(
                 FluxcoreServers.binary(context), FluxcoreServers.workDir(context), stop, log
+            )
+            "veepn" -> VeepnServers.fetch(
+                VeepnServers.binary(context), VeepnServers.workDir(context), stop, log
+            )
+            "geph" -> GephServers.fetch(
+                GephServers.binary(context), GephServers.workDir(context), stop, log
             )
         }
         return options(context, coreId)
@@ -113,6 +123,17 @@ object ServerChoice {
             // The engine measures every gateway while it lists them, so the
             // refreshed list is already the tested one.
             "fluxcore" -> options(context, coreId)
+            // The engine builds a real tunnel per server before it answers, so
+            // the tested list is its own ranked output.
+            "veepn" -> VeepnServers.test(
+                VeepnServers.binary(context), VeepnServers.workDir(context), stop, log
+            ).map { veepnOption(it.server, it.latencyMs) }
+            // An exit is only proven by connecting to it, which is what the
+            // connect itself does; the country list stands as the tested list.
+            "geph" -> options(context, coreId)
+            // Same for Opera: the engine ranks and tests its own endpoints, so
+            // the regions are the whole tested list.
+            "opera" -> options(context, coreId)
             "sstp" -> {
                 val countries = VpnGate.loadCache(context).associateBy({ it.key }, { it.country })
                 SstpScanner.scan(SstpScanner.loadEndpoints(context), stop, log)
@@ -121,7 +142,7 @@ object ServerChoice {
             }
             else -> emptyList()
         }
-        val result = if (coreId == "fluxcore") {
+        val result = if (coreId == "fluxcore" || coreId == "geph" || coreId == "opera") {
             list.distinctBy { it.key }
         } else {
             list.distinctBy { it.key }
@@ -167,6 +188,35 @@ object ServerChoice {
 
     /** The selector the user pinned for Fluxcore; null means Auto. */
     fun pinnedFluxcore(): String? = Prefs.server("fluxcore").ifBlank { null }
+
+    /** The server endpoint the user pinned for VeePN; null means Auto. */
+    fun pinnedVeepn(): String? = Prefs.server("veepn").ifBlank { null }
+
+    /** The exit country the user pinned for Geph; null means Auto. */
+    fun pinnedGeph(): String? = Prefs.server("geph").ifBlank { null }
+
+    /** The exit region the user pinned for Opera; null means Auto. */
+    fun pinnedOpera(): String? = Prefs.server("opera").ifBlank { null }
+
+    private fun operaOption(region: OperaRegion) = ServerOption(
+        region.key,
+        region.label,
+        region.detail
+    )
+
+    private fun gephOption(country: GephCountry) = ServerOption(
+        country.code,
+        country.label,
+        country.detail
+    )
+
+    private fun veepnOption(server: VeepnServer, latencyMs: Int = -1) = ServerOption(
+        server.endpoint,
+        server.label,
+        listOf(server.proto.uppercase(), server.method).filter { it.isNotBlank() }.joinToString(" · "),
+        reachable = if (latencyMs >= 0) true else null,
+        latencyMs = latencyMs
+    )
 
     private fun fluxcoreOption(gateway: FluxcoreGateway) = ServerOption(
         gateway.id,

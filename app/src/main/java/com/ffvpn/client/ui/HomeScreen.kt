@@ -74,6 +74,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -97,7 +99,8 @@ fun HomeScreen(
     state: AppState.State,
     onToggle: () -> Unit,
     onOpenSettings: () -> Unit,
-    onOpenTools: () -> Unit
+    onOpenTools: () -> Unit,
+    onOpenDonate: () -> Unit
 ) {
     val context = LocalContext.current
     val phase = phaseOf(state)
@@ -131,7 +134,7 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            TopBar(onOpenTools, onOpenSettings)
+            TopBar(onOpenTools, onOpenSettings, onOpenDonate)
             Spacer(Modifier.height(14.dp))
             CorePicker(state, enabled = !state.running && !state.busy && !state.disconnecting)
             if (ServerChoice.supports(state.coreId)) {
@@ -207,7 +210,11 @@ private fun phaseOf(state: AppState.State): Phase = when {
 }
 
 @Composable
-private fun TopBar(onOpenTools: () -> Unit, onOpenSettings: () -> Unit) {
+private fun TopBar(
+    onOpenTools: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenDonate: () -> Unit
+) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -220,6 +227,15 @@ private fun TopBar(onOpenTools: () -> Unit, onOpenSettings: () -> Unit) {
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier.weight(1f)
         )
+        // The little diamond: tapping it opens the support page.
+        IconButton(
+            onClick = onOpenDonate,
+            modifier = Modifier
+                .size(42.dp)
+                .semantics { contentDescription = Texts.donate }
+        ) {
+            DiamondIcon(width = 34.dp)
+        }
         IconButton(onClick = onOpenTools) {
             Icon(
                 imageVector = Icons.Rounded.Widgets,

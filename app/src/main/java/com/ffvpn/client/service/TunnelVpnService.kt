@@ -149,12 +149,15 @@ class TunnelVpnService : VpnService() {
                         }
                     )
                 }
-                if (readyFromCore) {
-                    ready.countDown()
-                } else if (code >= ERROR_CODE) {
+                if (code >= ERROR_CODE) {
                     error.compareAndSet(null, message.ifBlank { "status $code" })
                     ready.countDown()
                 }
+                // A core can announce "ready" from its log output while its own
+                // connect() is still checking traffic. Building the TUN here
+                // would race that check: the engine can still tear the tunnel
+                // down while reachability is being verified. The latch is
+                // released by connect() itself below.
             }
         }
 
@@ -182,8 +185,11 @@ class TunnelVpnService : VpnService() {
             }
             if (!result.isNullOrBlank()) {
                 error.compareAndSet(null, result)
-                ready.countDown()
             }
+            // connect() has returned, so the engine is done changing its
+            // process and its local proxy. Only now is it safe to establish the
+            // TUN and probe the tunnel; an early status line is not enough.
+            ready.countDown()
         }
 
         workers.execute {
@@ -254,6 +260,29 @@ class TunnelVpnService : VpnService() {
             }
             this.tunCore = tunCore
 
+            // The core's SOCKS port is live before Tun2Socks bridges it to the
+            // TUN, and Tun2Socks' persistent connection can starve the mixed
+            // inbound on some cores (VeePN). Probe reachability first, while the
+            // port still accepts fresh connections.
+            main.post {
+                if (!stopping && !stale(gen)) {
+                    AppState.update { it.copy(statusCode = 1002, statusDetail = Texts.verifyingTunnel) }
+                }
+            }
+            val reach = Reachability.verify(selected.proxyAddress, coreId = selected.id) {
+                stopping || stale(gen)
+            }
+            if (stopping || stale(gen)) {
+                closeTunnel()
+                return@execute
+            }
+            if (!reach.ok) {
+                AppState.log("tunnel is up but carries nothing: ${reach.detail}")
+                closeTunnel()
+                fail(StatusText.NO_TRAFFIC, reach.detail, gen)
+                return@execute
+            }
+
             val vpnError = try {
                 selected.startVpn(tunCore.fd)
             } catch (t: Throwable) {
@@ -271,27 +300,6 @@ class TunnelVpnService : VpnService() {
                 // The teardown may have run before the bridge was up, so its stop
                 // found nothing to stop. This session owns the bridge now.
                 selected.stopVpn()
-                return@execute
-            }
-
-            // The core says the interface is up, which is not the same as traffic
-            // reaching the internet: on a filtered link the exit it chose can be
-            // blocked while the local SOCKS handshake still succeeds. Ask for the
-            // sites people actually notice before calling this connected.
-            main.post {
-                if (!stopping && !stale(gen)) {
-                    AppState.update { it.copy(statusCode = 1002, statusDetail = Texts.verifyingTunnel) }
-                }
-            }
-            val reach = Reachability.verify(selected.proxyAddress) { stopping || stale(gen) }
-            if (stopping || stale(gen)) {
-                selected.stopVpn()
-                return@execute
-            }
-            if (!reach.ok) {
-                AppState.log("tunnel is up but carries nothing: ${reach.detail}")
-                closeTunnel()
-                fail(StatusText.NO_TRAFFIC, reach.detail, gen)
                 return@execute
             }
 
@@ -323,7 +331,8 @@ class TunnelVpnService : VpnService() {
                 ConnectSound.ping(this)
                 TunnelWatchdog.start(
                     Prefs.socksPort,
-                    selected.trafficProbeTimeoutMs
+                    selected.trafficProbeTimeoutMs,
+                    selected.probeHost
                 ) { fail(StatusText.NO_TRAFFIC, "no traffic through the tunnel", gen) }
             }
         }

@@ -136,6 +136,9 @@ object Texts {
         "lantern" -> p("Lantern", "لنترن", "Лантерн", "Lantern")
         "openrung" -> p("OpenRung", "اوپن‌رانگ", "OpenRung", "OpenRung", "OpenRung")
         "fluxcore" -> p("Fluxcore", "فلاکس‌کور", "Fluxcore", "Fluxcore", "Fluxcore")
+        "veepn" -> p("VeePN", "وی‌پی‌ان", "VeePN", "VeePN", "VeePN")
+        "geph" -> p("Geph", "گف", "Geph", "Geph", "Geph")
+        "opera" -> p("Opera", "اپرا", "Opera", "Opera", "Opera")
         "firefox" -> p("Firefox", "فایرفاکس", "Файрфокс", "Firefox")
         "tor" -> p("Tor", "تور", "Тор", "Tor")
         else -> id
@@ -783,6 +786,74 @@ object Texts {
             "局域网地址：$address（HTTP）"
         )
 
+    // ── Support: the little gold coin on the home screen and the page behind it ──
+
+    val donate: String
+        get() = p(
+            "Support the project",
+            "حمایت از پروژه",
+            "Поддержать проект",
+            "Apoyar el proyecto",
+            "支持项目"
+        )
+
+    val donateTitle: String
+        get() = p(
+            "Support Niloofar VPN",
+            "حمایت از نیلوفر وی\u200cپی\u200cان",
+            "Поддержать Niloofar VPN",
+            "Apoya Niloofar VPN",
+            "支持 Niloofar VPN"
+        )
+
+    val donateThanks: String
+        get() = p(
+            "Thank you for any financial support, even small amounts.",
+            "برای هر مقدار حمایت مالی حتی مبالغ کم سپاسگذارم",
+            "Спасибо за любую финансовую поддержку, даже за небольшие суммы.",
+            "Gracias por cualquier apoyo financiero, incluso por cantidades pequeñas.",
+            "感谢您的任何资金支持，即使金额很小。"
+        )
+
+    val donateQr: String
+        get() = p(
+            "QR code with the Monero address",
+            "کد QR حاوی آدرس مونرو",
+            "QR-код с адресом Monero",
+            "Código QR con la dirección Monero",
+            "包含门罗币地址的二维码"
+        )
+
+    val donateAddressLabel: String
+        get() = p(
+            "Monero address (XMR)",
+            "آدرس مونرو (XMR)",
+            "Адрес Monero (XMR)",
+            "Dirección Monero (XMR)",
+            "门罗币地址（XMR）"
+        )
+
+    val donateCopy: String
+        get() = p("Copy address", "کپی آدرس", "Копировать адрес", "Copiar dirección", "复制地址")
+
+    val donateCopied: String
+        get() = p(
+            "Address copied to clipboard",
+            "آدرس کپی شد",
+            "Адрес скопирован",
+            "Dirección copiada",
+            "地址已复制"
+        )
+
+    val donateHint: String
+        get() = p(
+            "Scan the code or copy the address to send XMR.",
+            "کد را اسکن کنید یا آدرس را کپی کنید تا XMR بفرستید.",
+            "Отсканируйте код или скопируйте адрес, чтобы отправить XMR.",
+            "Escanea el código o copia la dirección para enviar XMR.",
+            "扫描二维码或复制地址即可发送 XMR。"
+        )
+
     val alerts: String
         get() = p("Alerts", "اعلان‌ها", "Уведомления", "Avisos")
     val soundSwitch: String
@@ -1144,6 +1215,38 @@ object Texts {
                     "Ищем шлюзы, к которым можно подключиться",
                     "Buscando puertas de enlace a las que conectarse",
                     "正在寻找可连接的网关"
+                )
+            "veepn" to "connecting" ->
+                p(
+                    "Pinging VeePN servers and connecting",
+                    "در حال پینگ سرورهای وی‌پی‌ان و اتصال",
+                    "Пингуем серверы VeePN и подключаемся",
+                    "Haciendo ping a los servidores de VeePN y conectando",
+                    "正在 ping VeePN 服务器并连接"
+                )
+            "geph" to "connecting" ->
+                p(
+                    "Connecting to a Geph exit",
+                    "در حال اتصال به یک خروجی گف",
+                    "Подключаемся к выходу Geph",
+                    "Conectando a una salida de Geph",
+                    "正在连接 Geph 出口"
+                )
+            "geph" to "signing up" ->
+                p(
+                    "Registering a free Geph account",
+                    "در حال ساختن حساب رایگان گف",
+                    "Регистрируем бесплатный аккаунт Geph",
+                    "Registrando una cuenta gratuita de Geph",
+                    "正在注册免费的 Geph 账号"
+                )
+            "opera" to "connecting" ->
+                p(
+                    "Connecting to an Opera VPN region",
+                    "در حال اتصال به یک منطقهٔ اپرا",
+                    "Подключаемся к региону Opera",
+                    "Conectando a una región de Opera",
+                    "正在连接 Opera 区域"
                 )
             "firefox" to "connecting" ->
                 p("Refreshing the free server list", "در حال تازه کردن فهرست سرورهای رایگان", "Обновляем список бесплатных серверов", "Actualizando la lista de servidores gratuitos")

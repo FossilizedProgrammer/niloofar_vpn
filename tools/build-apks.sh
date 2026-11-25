@@ -10,6 +10,7 @@ ABIS=(armeabi-v7a arm64-v8a)
 LIBRARIES=(
     libaether.so libc2tun.so libffvpn.so libfluxcore.so liblantern.so liblyrebird.so libopenrung.so
     libsstp.so libsunlion.so libsunlionbridge.so libtor.so libtorrunner.so
+    libveepn.so libgeph.so libopera.so
 )
 ASSETS=(
     ca_roots.pem psiphon_embedded_entries.txt psiphon_servers.bin

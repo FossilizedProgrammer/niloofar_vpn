@@ -30,6 +30,14 @@ interface VpnCore {
         get() = 6_000
 
     /**
+     * The site the liveness probe asks for through [proxyAddress]. YouTube is
+     * the point of the check, but a provider can filter it on its own side: a
+     * core whose exits refuse it names a site they do carry instead.
+     */
+    val probeHost: String
+        get() = "www.youtube.com"
+
+    /**
      * True while another attempt cannot possibly help because the user has to
      * act first, such as signing in to the account the core runs on. The retry
      * ladder gives up immediately instead of burning its whole budget.

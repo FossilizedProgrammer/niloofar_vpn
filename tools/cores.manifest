@@ -13,6 +13,9 @@ eb96a7af30abb60a184e107c99f558055f93b577948df526ee91e6eca5b5b325  armeabi-v7a/li
 f6ae75f74631447b7043c0ba1a762a7fe5ce2eae3712b2628b5d5b5f7d493224  armeabi-v7a/libsunlionbridge.so
 cec8d0b1317353d6c37e2c9ba8db2c41da0bf3b2b920a8653c8e78b464c4c956  armeabi-v7a/libtor.so
 36928a2f7caad65bce3dc74be4afc5bec47029eacf305777ac9a5f73e588f6eb  armeabi-v7a/libtorrunner.so
+1c8b6b3b638521233b71ef55ee5c751e4eaa08c088b00409ef8a34fd1aea0343  armeabi-v7a/libveepn.so
+15372419446f99fa2a7ff309c1c37b4cf8b95ec8261dc7013f7c15e44db9c5e5  armeabi-v7a/libgeph.so
+6fc56ac13c458dda180f281ce329ed35a0fb0b2cb2ba0f6ab4a06e51aae85213  armeabi-v7a/libopera.so
 1c36661a7b06d79f9b5caeaefc68a50d33d47bfe437ac082e699498a5b326c13  arm64-v8a/libaether.so
 5ae5b5317b40be4b966d9156ccc5e8be31327f51cef8ae0fc33d645e2ec6fc9f  arm64-v8a/libc2tun.so
 4dba4a0fc95e2e5ced949e025fb9058b9e914990b12fbfb7764afa5f6cb0a7e6  arm64-v8a/libffvpn.so
@@ -25,6 +28,9 @@ e087c3cabb0699e5d1572d924e38ceae7747aebcf6b6b82897a50245bf7a678b  arm64-v8a/libo
 ebdafc9b8d6f07663b53c7f5866a05e26b4a6115cafe043d4719be2537deeb77  arm64-v8a/libsunlionbridge.so
 c8ebb23b3814a16e5763649e1eefec7725720b9dbf3e24a32508a807b8461937  arm64-v8a/libtor.so
 92a50c14fd233e612960e1083b828c43dc248122f56b18552f70da422cb0e686  arm64-v8a/libtorrunner.so
+6de5c844d610d538ac401565a4891d76a6f3389afa3100290efd0ced2d06bbf2  arm64-v8a/libveepn.so
+1e6b425877d092cdc4a342fc99a50491bc5587074c2753f407ccbb86afd980de  arm64-v8a/libgeph.so
+7c7b4b2978cf32937f34b22317d2396fad68fddf8e70062a06924e21d1c0153c  arm64-v8a/libopera.so
 
 # Build provenance from `go version -m`, informational only:
 # armeabi-v7a/libsunlion.so: go1.26.8 	build	-buildmode=c-shared 	build	-compiler=gc 	build	-trimpath=true 	build	CGO_ENABLED=1 	build	GOARCH=arm 	build	GOOS=android 	build	GOARM=7 

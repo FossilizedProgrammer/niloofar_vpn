@@ -8,16 +8,19 @@ import com.ffvpn.client.core.CoreRegistry
 import com.ffvpn.client.core.CrashGuard
 import com.ffvpn.client.core.FirefoxCore
 import com.ffvpn.client.core.FluxcoreCore
+import com.ffvpn.client.core.GephCore
 import com.ffvpn.client.core.GithubUpdates
 import com.ffvpn.client.core.LanternCore
 import com.ffvpn.client.core.LogRetention
 import com.ffvpn.client.core.NetworkMonitor
 import com.ffvpn.client.core.OpenRungCore
+import com.ffvpn.client.core.OperaCore
 import com.ffvpn.client.core.Prefs
 import com.ffvpn.client.core.PsiphonCore
 import com.ffvpn.client.core.SstpCore
 import com.ffvpn.client.core.SunAndLionCore
 import com.ffvpn.client.core.TorCore
+import com.ffvpn.client.core.VeepnCore
 
 class App : Application() {
     override fun onCreate() {
@@ -40,6 +43,9 @@ class App : Application() {
         CoreRegistry.register(LanternCore())
         CoreRegistry.register(OpenRungCore())
         CoreRegistry.register(FluxcoreCore())
+        CoreRegistry.register(VeepnCore())
+        CoreRegistry.register(GephCore())
+        CoreRegistry.register(OperaCore())
         CoreRegistry.register(TorCore())
         CoreRegistry.all().forEach { core ->
             runCatching { core.init(this) }

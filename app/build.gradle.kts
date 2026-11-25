@@ -11,8 +11,8 @@ android {
         applicationId = "com.ffvpn.client"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.4.0"
+        versionCode = 7
+        versionName = "1.5.0"
     }
 
     // A fixed key kept in the repo. Every build, local or CI, signs with the
@@ -78,15 +78,18 @@ android {
                 "**/libc2tun.so",
                 "**/libffvpn.so",
                 "**/libfluxcore.so",
+                "**/libgeph.so",
                 "**/liblantern.so",
                 "**/liblyrebird.so",
                 "**/libgojni.so",
                 "**/libopenrung.so",
+                "**/libopera.so",
                 "**/libsstp.so",
                 "**/libsunlion.so",
                 "**/libsunlionbridge.so",
                 "**/libtor.so",
-                "**/libtorrunner.so"
+                "**/libtorrunner.so",
+                "**/libveepn.so"
             )
         }
     }
